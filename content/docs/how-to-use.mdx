@@ -1,0 +1,160 @@
+---
+title: How to Use CHITRA
+description: Step-by-step guide to using CHITRA and exploring example datasets
+icon: LayoutTemplate
+---
+
+## **HOW TO USE CHITRA?**
+
+Below are the step-by-step instructions, accompanied by pictorial representations, to ensure a seamless experience with CHITRA.
+
+#### **Step 1: Getting Started**
+
+- On the landing page, click the “**Get Started**” button to begin.
+
+#### **Step 2: Uploading Files or Viewing Example Data**
+
+- On the next page, you can either:
+
+1. Upload Files
+2. View Example Datasets
+
+### **2.1.1 File Upload Instructions**
+
+#### **Mandatory Input Files:**
+
+1. Synteny Data
+2. Species Data
+3. Reference Chromosome Size
+
+#### **Optional Input Files:**
+
+1. Gene Annotations
+2. Breakpoint Data
+
+To upload files:
+
+_Click the_ “**Upload Data**” button. A popup window will appear where you can browse and upload the required input files.
+
+> **Note**: All input files should be in CSV format
+
+![](/media/image3.webp)
+
+### **2.1.2 Using Example Datasets**
+
+CHITRA includes pre-loaded example datasets to help users explore its functionality. Three types of example datasets are available:
+
+#### 1. Basic Synteny
+
+_Visualize synteny blocks among_ **three genomes**.
+
+**Input files required:**
+
+<div className="space-y-2 my-4">
+  <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
+    <span className="text-sm font-medium">synteny_data.csv</span>
+    <div className="flex gap-2">
+      <a href="/example/set1/synteny_data.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <a href="/example/set1/synteny_data.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
+    </div>
+  </div>
+  <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
+    <span className="text-sm font-medium">species_data.csv</span>
+    <div className="flex gap-2">
+      <a href="/example/set1/species_data.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <a href="/example/set1/species_data.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
+    </div>
+  </div>
+  <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
+    <span className="text-sm font-medium">ref_chromosome_sizes.csv</span>
+    <div className="flex gap-2">
+      <a href="/example/set1/ref_chromosome_sizes.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <a href="/example/set1/ref_chromosome_sizes.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
+    </div>
+  </div>
+</div>
+
+#### 2. Multiple Synteny
+
+_Compare synteny blocks among_ **multiple genomes**. Uses the same files as Basic Synteny.
+
+#### 3. Annotated Genome
+
+_Analyze annotated genomes_ using real datasets. Uses the same files as Basic Synteny, plus these additional files:
+
+<div className="space-y-2 my-4">
+  <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
+    <span className="text-sm font-medium">ref_gene_annotations.csv</span>
+    <div className="flex gap-2">
+      <a href="/example/set3/ref_gene_annotations.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <a href="/example/set3/ref_gene_annotations.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
+    </div>
+  </div>
+  <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
+    <span className="text-sm font-medium">breakpoints.csv</span>
+    <div className="flex gap-2">
+      <a href="/example/set3/bp.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <a href="/example/set3/bp.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
+    </div>
+  </div>
+</div>
+
+<video controls autoPlay muted loop playsInline className="w-full rounded-lg border shadow-lg my-6">
+  <source src="/media/v2.mp4" type="video/mp4" />
+</video>
+
+## Available Datasets
+
+Three types of example datasets are available:
+
+### 1. Basic Synteny
+- Simple synteny visualization between species.
+- Ideal for understanding the fundamental concepts of synteny blocks and chromosome mapping.
+
+### 2. Multi-Species
+- Complex synteny relationships across multiple species.
+- Allows comparison of genomic architecture across diverse organisms.
+- Includes data for multiple pairwise comparisons.
+
+### 3. Annotated Genome
+- Detailed genome annotations with gene information and breakpoints.
+- Includes gene features, locus tags, and symbols.
+- Provides breakpoint data for structural variation analysis.
+
+> [!NOTE]
+> You can preview and download the example data tables directly from the example files drawer below.
+
+<ExampleDrawerTrigger />
+
+## Exploring Example Data
+
+- Select any of the three options in the drawer to access the files.
+- You can preview the data or download the files directly.
+- Click **"Load"** to automatically populate the visualization with the selected dataset.
+
+![](/media/image4.png)
+
+## Feature Table Converter
+
+This tool converts NCBI Feature Tables into annotation files compatible with CHITRA.
+
+<video controls className="w-full rounded-lg border shadow-lg my-6 aspect-video bg-black">
+  <source src="/media/faeturetable.mp4" type="video/mp4" />
+</video>
+
+### How to use the Feature Table Converter
+
+1.  **Download a Feature Table**
+    - Get the file from the [NCBI FTP server](https://ftp.ncbi.nlm.nih.gov/genomes/refseq/).
+    - *Example directory:* [GRCh38.p14 Genome Assembly](https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/)
+    - *Example file:* [Feature Table File (.txt.gz)](https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_feature_table.txt.gz)
+
+2.  **Upload the File**
+    - Upload the downloaded `.ft`, `.txt`, or `.txt.gz` file to the converter.
+
+3.  **Download Converted Files**
+    - You will receive two CSV files compatible with CHITRA:
+        - `ref_chromosome_sizes.csv`: Contains the size of each chromosome.
+        - `ref_gene_annotations.csv`: Contains detailed gene annotation data.
+
+> **Note:** Feature Tables contain comprehensive genomic data, including gene locations and other features, which this converter processes for visualization.
