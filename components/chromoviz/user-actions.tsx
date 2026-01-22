@@ -1,340 +1,93 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, Transition } from 'motion/react';
-import { User as UserIcon, LogOut, Share2, X, ArrowRight, Copy, Trash2, Link as LinkIcon } from 'lucide-react';
-import { ShareDrawer } from '@/components/share-drawer';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React, { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/lib/supabaseClient';
-import { User } from '@supabase/supabase-js';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useClickOutside from '@/hooks/useClickOutside';
+import { Button } from '@/components/ui/button';
+import { Loader2, Save, LogIn } from 'lucide-react';
+import { ShareDrawer } from '@/components/share-drawer';
+import { useUser, SignInButton, UserButton } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
-import { LogIn } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface SharedLink {
-  id: string;
-  created_at: string;
-}
+export function UserActions({
+  onShare,
+  onSave,
+  onSignOut,
+  isVertical
+}: {
+  onShare: (title: string, isPublic: boolean) => Promise<string | null>;
+  onSave: (title: string) => Promise<string | null>;
+  onSignOut?: () => void;
+  isVertical?: boolean
+}) {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
 
-const transition: Transition = {
-  type: 'spring',
-  bounce: 0.1,
-  duration: 0.3,
-};
-
-export function UserActions({ user, onSignOut, onShare, isVertical }: { user: User | null; onSignOut: () => void; onShare: (title: string, isPublic: boolean) => Promise<string | null>; isVertical?: boolean }) {
-  const [activeTab, setActiveTab] = useState<string | null>(null);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [authMethod, setAuthMethod] = useState<'magic-link' | 'password'>('magic-link');
-  const containerRef = useRef<HTMLDivElement>(null!);
-  const [isOpen, setIsOpen] = useState(false);
-
-  useClickOutside(containerRef, () => {
-    setIsOpen(false);
-    setActiveTab(null);
-  });
-
-  const handleTabClick = (tab: string) => {
-    if (!isOpen) {
-      setIsOpen(true);
-      setActiveTab(tab);
-    } else if (activeTab === tab) {
-      setIsOpen(false);
-      setActiveTab(null);
-    } else {
-      setActiveTab(tab);
-    }
-  };
-
-  const handleSignIn = async () => {
-    if (authMethod === 'magic-link') {
-      if (!email) {
-        toast.error("Please enter your email address.");
-        return;
-      }
-      try {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: window.location.href },
-        });
-        if (error) throw error;
-        toast.success("Check your email for the magic link!");
-      } catch (error: any) {
-        toast.error(error.message || "Failed to send magic link.");
-      }
-    } else { // password
-      if (!email || !password) {
-        toast.error("Please enter both email and password.");
-        return;
-      }
-      try {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Successfully signed in!");
-        setIsOpen(false);
-        setActiveTab(null);
-      } catch (error: any) {
-        toast.error(error.message || "Failed to sign in.");
-      }
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (!email || !password) {
-      toast.error("Please enter both email and password.");
+  // We can internally handle the save check for user
+  const handleSave = async () => {
+    if (!isSignedIn) {
+      toast.error("Please sign in to save.");
       return;
     }
+
+    setIsSaving(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.href },
-      });
-      if (error) throw error;
-      toast.success("Account created! Check your email for the confirmation link.");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign up.");
+      await onSave("Untitled Visualization");
+    } catch (e) {
+      console.error(e);
+      // Toast is likely handled in parent, but safety check
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  return (
-    <motion.div ref={containerRef} className="relative">
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={transition}
-            className="absolute bottom-full mb-2 left-0 w-max z-50"
-          >
-            <div className="bg-white/80 dark:bg-black/40 backdrop-blur-md border-[1.5px] border-indigo-200/50 dark:border-white/20 rounded-2xl shadow-lg overflow-hidden">
-              <div className="p-2">
-                {activeTab === 'profile' && <ProfilePanel user={user} />}
-                {activeTab === 'signin' && (
-                  <SignInPanel
-                    email={email}
-                    setEmail={setEmail}
-                    password={password}
-                    setPassword={setPassword}
-                    authMode={authMode}
-                    setAuthMode={setAuthMode}
-                    authMethod={authMethod}
-                    setAuthMethod={setAuthMethod}
-                    onSignIn={handleSignIn}
-                    onSignUp={handleSignUp}
-                  />
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center gap-1 p-1.5 bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-2xl shadow-lg">
+        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-      <div className={cn(
-        "flex items-center gap-1 p-1.5 bg-white/80 dark:bg-black/40 backdrop-blur-md border-[1.5px] border-indigo-200/50 dark:border-white/20 rounded-2xl shadow-lg",
-        isVertical ? "flex-col" : "flex-row"
-      )}>
-        {user ? (
-          <>
-            <button
-              onClick={() => handleTabClick('profile')}
-              className={`p-1.5 rounded-lg transition-colors flex items-center gap-2 ${activeTab === 'profile' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-            >
-              <Avatar className="h-8 w-8 ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-black">
-                <AvatarImage src={user.user_metadata.avatar_url} />
-                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </button>
-            {isVertical && <Separator orientation="horizontal" className="w-6 my-1 bg-white/20" />}
-            <ShareDrawer user={user} onShare={onShare} />
-            {!isVertical && <Separator orientation="vertical" className="h-6 mx-1 bg-white/20" />}
-            <button onClick={onSignOut} className="p-2 rounded-lg transition-colors bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30 [&_svg]:stroke-red-500">
-              <LogOut className="h-4 w-4" />
-            </button>
-          </>
-        ) : (
+  return (
+    <div className={cn(
+      "flex items-center gap-1 p-1.5 bg-white/80 dark:bg-black/40 backdrop-blur-md border-[1.5px] border-indigo-200/50 dark:border-white/20 rounded-2xl shadow-lg",
+      isVertical ? "flex-col" : "flex-row"
+    )}>
+      {isSignedIn ? (
+        <>
+          <div className="p-1">
+            <UserButton afterSignOutUrl="/" />
+          </div>
+
+          {isVertical && <Separator orientation="horizontal" className="w-6 my-1 bg-white/20" />}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSave}
+            disabled={isSaving}
+            title="Save Visualization"
+          >
+            {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+          </Button>
+
+          <ShareDrawer onShare={onShare} />
+        </>
+      ) : (
+        <SignInButton mode="modal" forceRedirectUrl="/chitra">
           <button
-            onClick={() => handleTabClick('signin')}
             className={cn(
               "p-2 rounded-lg transition-colors flex items-center gap-2 text-xs",
               !isVertical && "px-3",
-              "bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/30 [&_svg]:stroke-blue-500",
-              activeTab === 'signin' ? 'bg-blue-500/40' : ''
+              "bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/30 [&_svg]:stroke-blue-500"
             )}
           >
             <LogIn className="h-4 w-4" />
-            {!isVertical && <span>Sign in to share...</span>}
+            {!isVertical && <span>Sign In</span>}
           </button>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-function SignInPanel({
-  email,
-  setEmail,
-  password,
-  setPassword,
-  authMode,
-  setAuthMode,
-  authMethod,
-  setAuthMethod,
-  onSignIn,
-  onSignUp,
-}: {
-  email: string;
-  setEmail: (value: string) => void;
-  password: string;
-  setPassword: (value: string) => void;
-  authMode: 'signin' | 'signup';
-  setAuthMode: (mode: 'signin' | 'signup') => void;
-  authMethod: 'magic-link' | 'password';
-  setAuthMethod: (method: 'magic-link' | 'password') => void;
-  onSignIn: () => void;
-  onSignUp: () => void;
-}) {
-  const isSignIn = authMode === 'signin';
-
-  return (
-    <div className="p-2 space-y-3 w-64">
-      <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as 'signin' | 'signup')} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-8">
-          <TabsTrigger value="signin" className="text-xs h-6">Sign In</TabsTrigger>
-          <TabsTrigger value="signup" className="text-xs h-6">Sign Up</TabsTrigger>
-        </TabsList>
-        
-        {/* Sign In Content */}
-        <TabsContent value="signin" className="mt-2">
-          <Tabs value={authMethod} onValueChange={(value) => setAuthMethod(value as 'magic-link' | 'password')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-7">
-              <TabsTrigger value="magic-link" className="text-xs h-5">Magic Link</TabsTrigger>
-              <TabsTrigger value="password" className="text-xs h-5">Password</TabsTrigger>
-            </TabsList>
-            <TabsContent value="magic-link" className="mt-2">
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-8 text-xs"
-                onKeyDown={(e) => e.key === 'Enter' && onSignIn()}
-              />
-            </TabsContent>
-            <TabsContent value="password" className="mt-2 space-y-1">
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-8 text-xs"
-              />
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-8 text-xs"
-                onKeyDown={(e) => e.key === 'Enter' && onSignIn()}
-              />
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-
-        {/* Sign Up Content */}
-        <TabsContent value="signup" className="mt-2 space-y-1">
-           <Input
-            type="email"
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-8 text-xs"
-          />
-          <Input
-            type="password"
-            placeholder="Create a password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-8 text-xs"
-            onKeyDown={(e) => e.key === 'Enter' && onSignUp()}
-          />
-        </TabsContent>
-      </Tabs>
-      <Button size="sm" className="w-full" onClick={isSignIn ? onSignIn : onSignUp}>
-        {isSignIn ? 'Sign In' : 'Sign Up'}
-      </Button>
+        </SignInButton>
+      )}
     </div>
-  );
-}
-
-function ProfilePanel({ user }: { user: User | null }) {
-  const [fullName, setFullName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      setFullName(user.user_metadata.full_name || '');
-      setAvatarUrl(user.user_metadata.avatar_url || '');
-    }
-  }, [user]);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    const { error } = await supabase.auth.updateUser({
-      data: { full_name: fullName, avatar_url: avatarUrl }
-    });
-
-    if (error) {
-      toast.error('Failed to update profile: ' + error.message);
-    } else {
-      toast.success('Profile updated successfully!');
-      router.refresh();
-    }
-  };
-
-  if (!user) return null;
-
-  return (
-    <form onSubmit={handleUpdateProfile} className="p-2 space-y-3 text-sm w-64">
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-xs">Email</Label>
-        <Input id="email" type="email" value={user.email || ''} disabled className="h-8 text-xs" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="fullName" className="text-xs">Full Name</Label>
-        <Input
-          id="fullName"
-          type="text"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="h-8 text-xs"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="avatarUrl" className="text-xs">Avatar URL</Label>
-        <Input
-          id="avatarUrl"
-          type="url"
-          value={avatarUrl}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-          className="h-8 text-xs"
-        />
-      </div>
-      <Button type="submit" size="sm" className="w-full">Save Changes</Button>
-    </form>
   );
 }

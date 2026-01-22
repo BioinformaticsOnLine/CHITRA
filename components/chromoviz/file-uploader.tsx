@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { FileUploader, FileUploaderContent, FileUploaderItem, FileInput } from "@/components/extension/file-uploader";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
-import { User } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from 'uuid';
 import { Upload, AlertCircle, CheckCircle2, FileText, TableProperties, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -479,7 +477,7 @@ interface FileUploaderGroupProps {
     annotations: (data: any[], datasetId?: string) => void;
     breakpoints?: (data: any[], datasetId?: string) => void;
   };
-  user: User | null;
+  user?: any;
   children?: React.ReactNode;
   trigger?: React.ReactNode;
 }
@@ -546,45 +544,16 @@ export function FileUploaderGroup({ onDataLoad, user, children, trigger }: FileU
 
   const handleVisualize = async () => {
     if (uploadedData.synteny && uploadedData.species && uploadedData.reference) {
-      if (user) {
-        const datasetId = uuidv4();
-        const uploadPromises = Object.entries(uploadedData)
-          .filter((entry): entry is [string, { file: File; data: any[] }] => !!entry[1])
-          .map(async ([type, { file }]) => {
-            const filePath = `user-uploads/${user.id}/${datasetId}/${file.name}`;
-            const { error } = await supabase.storage.from('user-uploads').upload(filePath, file);
-            if (error) {
-              throw new Error(`Failed to upload ${file.name}: ${error.message}`);
-            }
-          });
-
-        try {
-          await Promise.all(uploadPromises);
-          toast.success("Files uploaded successfully!");
-          onDataLoad.reference(uploadedData.reference.data, datasetId);
-          onDataLoad.species(uploadedData.species.data, datasetId);
-          onDataLoad.synteny(uploadedData.synteny.data, datasetId);
-          if (uploadedData.annotations) {
-            onDataLoad.annotations(uploadedData.annotations.data, datasetId);
-          }
-          if (uploadedData.breakpoints) {
-            onDataLoad.breakpoints?.(uploadedData.breakpoints.data, datasetId);
-          }
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "An error occurred during file upload";
-          toast.error(errorMessage);
-          return;
-        }
-      } else {
-        onDataLoad.reference(uploadedData.reference.data);
-        onDataLoad.species(uploadedData.species.data);
-        onDataLoad.synteny(uploadedData.synteny.data);
-        if (uploadedData.annotations) {
-          onDataLoad.annotations(uploadedData.annotations.data);
-        }
-        if (uploadedData.breakpoints) {
-          onDataLoad.breakpoints?.(uploadedData.breakpoints.data);
-        }
+      // Pass parsed data to parent
+      // We don't upload here anymore; saving is handled by the main Save action in page.tsx
+      onDataLoad.reference(uploadedData.reference.data);
+      onDataLoad.species(uploadedData.species.data);
+      onDataLoad.synteny(uploadedData.synteny.data);
+      if (uploadedData.annotations) {
+        onDataLoad.annotations(uploadedData.annotations.data);
+      }
+      if (uploadedData.breakpoints) {
+        onDataLoad.breakpoints?.(uploadedData.breakpoints.data);
       }
       setIsOpen(false);
     }

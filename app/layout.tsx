@@ -1,7 +1,8 @@
 // import Provider from '@/app/provider'
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
-import AuthWrapper from '@/components/wrapper/auth-wrapper'
+// import AuthWrapper from '@/components/wrapper/auth-wrapper'
+import ConvexClientProvider from '@/components/ConvexClientProvider'
 import { Analytics } from "@vercel/analytics/react"
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata, Viewport } from 'next'
@@ -44,35 +45,35 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthWrapper>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <link rel="shortcut icon" href="/favicon.ico" />
-          <link rel="icon" type="image/x-icon" sizes="16x16 32x32" href="/favicon.ico" />
-          <link rel="icon" sizes="192x192" href="/favicon-192.png" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180-precomposed.png" />
-          <meta name="msapplication-TileColor" content="#FFFFFF" />
-          <meta name="msapplication-TileImage" content="/favicon-144.png" />
-          <link rel="manifest" href="/manifest.json" />
-        </head>
-        <body className={`${GeistSans.className} flex min-h-screen flex-col`}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            storageKey="chitra-theme"
-            forcedTheme={undefined}
-            themes={['light', 'dark', 'system']}
-          >
-            <RootProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" type="image/x-icon" sizes="16x16 32x32" href="/favicon.ico" />
+        <link rel="icon" sizes="192x192" href="/favicon-192.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180-precomposed.png" />
+        <meta name="msapplication-TileColor" content="#FFFFFF" />
+        <meta name="msapplication-TileImage" content="/favicon-144.png" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
+      <body className={`${GeistSans.className} flex min-h-screen flex-col`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          storageKey="chitra-theme"
+          forcedTheme={undefined}
+          themes={['light', 'dark', 'system']}
+        >
+          <RootProvider>
+            <ConvexClientProvider>
               {children}
               <Toaster />
-            </RootProvider>
-          </ThemeProvider>
-          <Analytics />
-        </body>
-      </html>
-    </AuthWrapper>
+            </ConvexClientProvider>
+          </RootProvider>
+        </ThemeProvider>
+        <Analytics />
+      </body>
+    </html>
   )
 }

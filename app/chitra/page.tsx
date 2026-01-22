@@ -21,6 +21,32 @@ import {
 import * as d3 from 'd3';
 import { KonvaSynteny } from './konva-synteny';
 import { SyntenyData, ChromosomeData, ReferenceGenomeData, GeneAnnotation, ChromosomeBreakpoint } from '../types';
+// import { visualizationService, VisualizationState } from "@/lib/visualization-service";
+import { api } from "@/convex/_generated/api";
+
+// Define VisualizationState locally matching the Convex schema expectation
+export interface VisualizationState {
+    version: string;
+    dataSetType: 'example' | 'custom_db' | 'shared';
+    exampleDataSetPath?: string;
+    datasetId?: string;
+
+    // Visual Configuration
+    selectedSpecies: string[];
+    selectedChromosomes: string[];
+    selectedSyntenyIds?: string[];
+    alignmentFilter: 'all' | 'forward' | 'reverse';
+    selectedMutationTypes: Array<[string, any]>; // Serialized Map
+    customSpeciesColors: Array<[string, string]>; // Serialized Map
+
+    // View State
+    mainViewTransform: { k: number; x: number; y: number };
+    showAnnotations: boolean;
+    showTooltips: boolean;
+    isDetailViewOpen?: boolean;
+    currentSelectedBlockIndex?: number;
+    chordViewConfig?: any;
+}
 import { useTheme } from "next-themes";
 import { motion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
@@ -47,9 +73,11 @@ import {
 } from "@/config/chromoviz.config";
 import BreathingText from "@/components/ui/breathing-text";
 import { MobileWarning } from "@/components/chromoviz/mobile-warning";
-import { supabase } from '@/lib/supabaseClient';
+import { useMutation, useQuery } from "convex/react";
+
+import { Id } from "@/convex/_generated/dataModel";
+import { useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
-import { User } from '@supabase/supabase-js';
 
 const parseCSVRow = (d: any): any => {
     return {
@@ -105,40 +133,7 @@ function parseBreakpointRow(d: d3.DSVRowString): ChromosomeBreakpoint {
     };
 }
 
-// Interface for the shared visualization state
-interface VisualizationState {
-    version: string;
-    dataSetType: 'example' | 'custom_db' | 'shared';
-    exampleDataSetPath?: string;
-    datasetId?: string; // For custom data
 
-    // Data
-    syntenyData?: SyntenyData[];
-    speciesData?: ChromosomeData[];
-    referenceData?: ReferenceGenomeData | null;
-
-    // Selections & Filters
-    selectedSpecies: string[];
-    selectedChromosomes: string[];
-    selectedSyntenyIds: string[]; // Store unique IDs for synteny blocks
-    alignmentFilter: 'all' | 'forward' | 'reverse';
-    selectedMutationTypes: Array<[string, MutationType]>; // Serialized Map
-    customSpeciesColors: Array<[string, string]>; // Serialized Map
-
-    // Main Visualization View State
-    mainViewTransform: { k: number; x: number; y: number }; // D3 zoom transform
-    showAnnotations: boolean;
-    showTooltips: boolean;
-
-    // UI State
-    isDetailViewOpen?: boolean; // Optional, as it might not always be relevant
-    currentSelectedBlockIndex?: number; // Optional
-    // Add other relevant UI states if necessary
-    chordViewConfig?: Partial<SyntenyViewConfig>;
-
-    // User Info
-    user_id?: string;
-}
 
 // Add this interface for ChordView config
 interface SyntenyViewConfig {
@@ -275,42 +270,52 @@ function LoadingSkeleton({
 }
 
 // Add this utility function at the top of the file
-function downloadCSV(data: SyntenyData[], filename: string) {
-    // Define CSV headers
+// CSV Generation Helpers
+function generateSyntenyCSV(data: SyntenyData[]): string {
     const headers = [
-        'Reference Species',
-        'Reference Chromosome',
-        'Reference Start (Mb)',
-        'Reference End (Mb)',
-        'Query Species',
-        'Query Chromosome',
-        'Query Start (Mb)',
-        'Query End (Mb)',
-        'Size (Mb)',
-        'Orientation'
+        'ref_name', 'ref_chr', 'ref_start', 'ref_end',
+        'query_name', 'query_chr', 'query_start', 'query_end', 'query_strand'
     ];
-
-    // Convert data to CSV rows
     const rows = data.map(link => [
-        link.ref_name,
-        link.ref_chr,
-        (link.ref_start / 1_000_000).toFixed(2),
-        (link.ref_end / 1_000_000).toFixed(2),
-        link.query_name,
-        link.query_chr,
-        (link.query_start / 1_000_000).toFixed(2),
-        (link.query_end / 1_000_000).toFixed(2),
-        ((link.ref_end - link.ref_start) / 1_000_000).toFixed(2),
-        link.query_strand === '+' ? 'Forward' : 'Reverse'
+        link.ref_name, link.ref_chr, link.ref_start.toString(), link.ref_end.toString(),
+        link.query_name, link.query_chr, link.query_start.toString(), link.query_end.toString(),
+        link.query_strand
     ]);
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
 
-    // Combine headers and rows
-    const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.join(','))
-    ].join('\n');
+function generateSpeciesCSV(data: ChromosomeData[]): string {
+    const headers = ['species_name', 'chr_id', 'chr_size_bp', 'centromere_start', 'centromere_end'];
+    const rows = data.map(d => [
+        d.species_name, d.chr_id, d.chr_size_bp.toString(),
+        d.centromere_start?.toString() || '', d.centromere_end?.toString() || ''
+    ]);
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
 
-    // Create and trigger download
+function generateReferenceCSV(data: ReferenceGenomeData['chromosomeSizes']): string {
+    const headers = ['chromosome', 'size', 'centromere_start', 'centromere_end'];
+    const rows = data.map(d => [
+        d.chromosome, d.size.toString(),
+        d.centromere_start?.toString() || '', d.centromere_end?.toString() || ''
+    ]);
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+}
+
+function downloadCSV(data: SyntenyData[], filename: string) {
+    // Re-use logic for compatibility, though we prefer raw format for save
+    // The previous implementation used human-readable headers, keeping them for download button
+    const headers = [
+        'Reference Species', 'Reference Chromosome', 'Reference Start (Mb)', 'Reference End (Mb)',
+        'Query Species', 'Query Chromosome', 'Query Start (Mb)', 'Query End (Mb)',
+        'Size (Mb)', 'Orientation'
+    ];
+    const rows = data.map(link => [
+        link.ref_name, link.ref_chr, (link.ref_start / 1_000_000).toFixed(2), (link.ref_end / 1_000_000).toFixed(2),
+        link.query_name, link.query_chr, (link.query_start / 1_000_000).toFixed(2), (link.query_end / 1_000_000).toFixed(2),
+        ((link.ref_end - link.ref_start) / 1_000_000).toFixed(2), link.query_strand === '+' ? 'Forward' : 'Reverse'
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -425,7 +430,7 @@ function ChromoVizContent() {
     const [currentShareId, setCurrentShareId] = useState<string | null>(null); // For storing the ID of a saved state
     const [isLoadingShare, setIsLoadingShare] = useState(false); // To indicate when sharing/loading shared state
     const [downloadProgress, setDownloadProgress] = useState<{ current: number; total: number } | null>(null);
-    const [user, setUser] = useState<User | null>(null);
+    // const [user, setUser] = useState<User | null>(null); // Replaced by useUser
     const [currentDatasetId, setCurrentDatasetId] = useState<string | null>(null);
     const [initialTransform, setInitialTransform] = useState<any>(null);
     const [chordViewConfig, setChordViewConfig] = useState<Partial<SyntenyViewConfig>>({});
@@ -458,24 +463,18 @@ function ChromoVizContent() {
         }));
     }, [customSpeciesColors]);
 
-    useEffect(() => {
-        const checkUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
-        };
-        checkUser();
+    // Clerk handles auth state
+    const { user } = useUser();
 
-        const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            setUser(session?.user ?? null);
-            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-                router.refresh();
-            }
-        });
-
-        return () => {
-            authListener.subscription.unsubscribe();
-        };
-    }, [router]);
+    // Use Query for shared data loading
+    // We skip the query if there is no shareId
+    const searchParams = useSearchParams();
+    const shareId = searchParams.get('shareId');
+    const sharedVizData = useQuery(api.visualizations.getVisualization,
+        shareId ? { id: shareId as Id<"visualizations"> } : "skip"
+    );
+    const saveMutation = useMutation(api.visualizations.saveVisualization);
+    const generateUploadUrl = useMutation(api.visualizations.generateUploadUrl);
 
     // Initialize from localStorage
     useEffect(() => {
@@ -600,6 +599,7 @@ function ChromoVizContent() {
         setIsLoading(true);
         setError(null);
         setIsUsingExample(true);
+        localStorage.setItem('lastExamplePath', path);
         setShowWelcomeCard(false);
 
         // Reset selections to ensure new data is not filtered by stale selections
@@ -672,6 +672,7 @@ function ChromoVizContent() {
                 });
                 return newData;
             });
+            setIsUsingExample(false);
         },
         reference: (data: any[], datasetId?: string) => {
             setReferenceData(prev => ({
@@ -683,6 +684,7 @@ function ChromoVizContent() {
                     centromere_end: d.centromere_end ? +d.centromere_end : undefined
                 }))
             }));
+            setIsUsingExample(false);
         },
         annotations: (data: GeneAnnotation[], datasetId?: string) => {
             console.log('Loading annotation data:', data);
@@ -700,6 +702,7 @@ function ChromoVizContent() {
                     breakpoints: prev.breakpoints
                 };
             });
+            setIsUsingExample(false);
         },
         breakpoints: (data: ChromosomeBreakpoint[], datasetId?: string) => {
             console.log('Loading breakpoints data:', data);
@@ -717,6 +720,7 @@ function ChromoVizContent() {
                     breakpoints: data
                 };
             });
+            setIsUsingExample(false);
         }
     };
 
@@ -1016,141 +1020,72 @@ function ChromoVizContent() {
     }, []);
 
     // Effect to load shared state from URL
-    const searchParams = useSearchParams();
+    // Load Shared State Effect
     const [processedShareId, setProcessedShareId] = useState<string | null>(null);
 
     useEffect(() => {
-        const shareId = searchParams.get('shareId');
+        if (!sharedVizData || processedShareId === shareId) return;
 
-        if (shareId && shareId !== processedShareId) {
-            const loadSharedState = async () => {
-                setIsLoadingShare(true);
-                setIsLoading(true); // Show main loading screen
-                setShowWelcomeCard(false);
-                try {
-                    const { data, error: dbError } = await supabase
-                        .from('shared_visualizations')
-                        .select('visualization_state')
-                        .eq('id', shareId)
-                        .single();
+        const load = async () => {
+            setIsLoading(true);
+            setShowWelcomeCard(false);
+            try {
+                const { fileUrls, ...state } = sharedVizData;
 
-                    if (dbError) throw dbError;
+                // Load Data
+                if (state.dataSetType === 'example' && state.exampleDataSetPath) {
+                    await loadExampleData(state.exampleDataSetPath);
+                } else if (fileUrls && (fileUrls.synteny || fileUrls.species)) {
+                    // Fetch files from URLs
+                    const [syntenyText, speciesText, refText] = await Promise.all([
+                        fileUrls.synteny ? fetch(fileUrls.synteny).then(r => r.text()) : Promise.resolve(""),
+                        fileUrls.species ? fetch(fileUrls.species).then(r => r.text()) : Promise.resolve(""),
+                        fileUrls.reference ? fetch(fileUrls.reference).then(r => r.text()) : Promise.resolve("")
+                    ]);
 
-                    if (data?.visualization_state) {
-                        const state = data.visualization_state as VisualizationState;
-
-                        setProcessedShareId(shareId);
-
-                        if (state.dataSetType === 'shared') {
-                            setSyntenyData(state.syntenyData || []);
-                            setSpeciesData(state.speciesData || []);
-                            setReferenceData(state.referenceData || null);
-                        } else if (state.dataSetType === 'example' && state.exampleDataSetPath) {
-                            await loadExampleData(state.exampleDataSetPath);
-                            localStorage.setItem('lastExamplePath', state.exampleDataSetPath);
-                        } else if (state.dataSetType === 'custom_db' && state.datasetId) {
-                            // Load data from Supabase Storage
-                            toast.info("Downloading custom files from storage...");
-                            const { data: files, error: listError } = await supabase.storage
-                                .from('user-uploads')
-                                .list(`${state.user_id}/${state.datasetId}`);
-
-                            if (listError) throw listError;
-
-                            setDownloadProgress({ current: 0, total: files.length });
-
-                            const loadedFiles: { name: string; data: string }[] = [];
-
-                            for (let i = 0; i < files.length; i++) {
-                                const file = files[i];
-                                setDownloadProgress({ current: i + 1, total: files.length });
-
-                                const { data: blobData, error: downloadError } = await supabase.storage
-                                    .from('user-uploads')
-                                    .download(`${state.user_id}/${state.datasetId}/${file.name}`);
-
-                                if (downloadError) throw downloadError;
-
-                                const text = await blobData.text();
-                                loadedFiles.push({ name: file.name, data: text });
-                            }
-
-                            setDownloadProgress(null); // Clear progress when done
-
-                            // This is a simplified parsing logic. You might need to make this more robust
-                            // based on file names to map to the correct data type (synteny, species, etc.)
-                            loadedFiles.forEach(file => {
-                                if (file.name.includes('synteny')) {
-                                    handleDataLoad.synteny(d3.csvParse(file.data, parseCSVRow));
-                                } else if (file.name.includes('species')) {
-                                    handleDataLoad.species(d3.csvParse(file.data, parseChromosomeRow));
-                                } else if (file.name.includes('ref_chromosome_sizes')) {
-                                    handleDataLoad.reference(d3.csvParse(file.data, parseChromosomeSizeRow));
-                                } else if (file.name.includes('ref_gene_annotations')) {
-                                    handleDataLoad.annotations(d3.csvParse(file.data, parseGeneAnnotationRow));
-                                } else if (file.name.includes('bp')) {
-                                    handleDataLoad.breakpoints(d3.csvParse(file.data, parseBreakpointRow));
-                                }
-                            });
-                        }
-
-                        setSelectedSpecies(state.selectedSpecies || []);
-                        setSelectedChromosomes(state.selectedChromosomes || []);
-                        setAlignmentFilter(state.alignmentFilter || 'all');
-                        setSelectedMutationTypes(new Map(state.selectedMutationTypes || []));
-                        setCustomSpeciesColors(new Map(state.customSpeciesColors || []));
-
-                        if (state.mainViewTransform) {
-                            const transform = d3.zoomIdentity
-                                .translate(state.mainViewTransform.x, state.mainViewTransform.y)
-                                .scale(state.mainViewTransform.k);
-                            setInitialTransform(transform);
-                        }
-
-                        if (state.chordViewConfig) {
-                            setChordViewConfig(state.chordViewConfig);
-                        }
-
-                        setShowAnnotations(state.showAnnotations !== undefined ? state.showAnnotations : true);
-                        setShowTooltips(state.showTooltips !== undefined ? state.showTooltips : true);
-                        setIsDetailViewOpen(state.isDetailViewOpen !== undefined ? state.isDetailViewOpen : true);
-                        setCurrentBlockIndex(state.currentSelectedBlockIndex || 0);
-
-                        const dataTypeMessage = state.dataSetType === 'custom_db'
-                            ? "Shared custom visualization loaded!"
-                            : state.dataSetType === 'example'
-                                ? "Shared example visualization loaded!"
-                                : "Shared visualization loaded!";
-                        toast.success(dataTypeMessage);
-                    } else {
-                        toast.error("Could not find the shared visualization.");
-                        setProcessedShareId(shareId); // Mark as processed even if not found to prevent retries
-                    }
-                } catch (e) {
-                    console.error("Error loading shared visualization:", e);
-                    let errorMessage = "Failed to load shared visualization.";
-
-                    if (e instanceof Error) {
-                        if (e.message.includes('storage')) {
-                            errorMessage = "Failed to download custom files from storage. The files may have been deleted.";
-                        } else if (e.message.includes('not found')) {
-                            errorMessage = "Shared visualization not found. The link may be invalid or expired.";
-                        } else {
-                            errorMessage = e.message;
-                        }
-                    }
-
-                    toast.error(errorMessage);
-                    setProcessedShareId(shareId); // Mark as processed on error
-                } finally {
-                    setIsLoadingShare(false);
-                    setIsLoading(false); // Clear main loading screen
-                    setDownloadProgress(null); // Clear download progress
+                    if (syntenyText) handleDataLoad.synteny(d3.csvParse(syntenyText, parseCSVRow));
+                    if (speciesText) handleDataLoad.species(d3.csvParse(speciesText, parseChromosomeRow));
+                    if (refText) handleDataLoad.reference(d3.csvParse(refText, parseChromosomeSizeRow));
                 }
-            };
-            loadSharedState();
-        }
-    }, [searchParams, processedShareId]); // Depend on shareId from searchParams and processedShareId
+
+                // Restore State
+                // Restore State
+                const vizState = state.visualizationState;
+                if (vizState) {
+                    if (vizState.selectedSpecies) setSelectedSpecies(vizState.selectedSpecies);
+                    if (vizState.selectedChromosomes) setSelectedChromosomes(vizState.selectedChromosomes);
+                    if (vizState.alignmentFilter) setAlignmentFilter(vizState.alignmentFilter as any);
+                    if (vizState.selectedMutationTypes) setSelectedMutationTypes(new Map(vizState.selectedMutationTypes as any));
+                    if (vizState.customSpeciesColors) setCustomSpeciesColors(new Map(vizState.customSpeciesColors as any));
+
+                    if (vizState.mainViewTransform) {
+                        const transform = d3.zoomIdentity
+                            .translate(vizState.mainViewTransform.x, vizState.mainViewTransform.y)
+                            .scale(vizState.mainViewTransform.k);
+                        setInitialTransform(transform);
+                    }
+
+                    if (vizState.chordViewConfig) setChordViewConfig(vizState.chordViewConfig);
+                    if (vizState.showAnnotations !== undefined) setShowAnnotations(vizState.showAnnotations);
+                    if (vizState.showTooltips !== undefined) setShowTooltips(vizState.showTooltips);
+                    if (vizState.isDetailViewOpen !== undefined) setIsDetailViewOpen(vizState.isDetailViewOpen);
+                    if (vizState.currentSelectedBlockIndex !== undefined) setCurrentBlockIndex(vizState.currentSelectedBlockIndex);
+                }
+
+                toast.success("Visualization loaded!");
+                if (shareId) setProcessedShareId(shareId);
+
+            } catch (e) {
+                console.error("Error loading shared viz", e);
+                toast.error("Failed to load visualization");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        load();
+
+    }, [sharedVizData, processedShareId, shareId]);
 
     useEffect(() => {
         if (initialTransform && svgRef.current && zoomBehaviorRef.current && syntenyData.length > 0) {
@@ -1159,33 +1094,58 @@ function ChromoVizContent() {
         }
     }, [initialTransform, syntenyData]);
 
-    const handleShare = async (title: string, isPublic: boolean): Promise<string | null> => {
+    // Unified Save/Share Handler
+    const handleSaveOrShare = async (title: string, isPublic: boolean): Promise<string | null> => {
         if (!user) {
-            toast.error("Please sign in to share your visualization.", {
-                action: {
-                    label: "Sign In",
-                    onClick: () => router.push('/sign-in'),
-                },
-            });
+            toast.error("Please sign in to save or share.");
             return null;
         }
 
-        if (!referenceData || !zoomBehaviorRef.current) {
-            toast.error("Cannot share, data or view not fully loaded.");
+        if (!referenceData || !syntenyData.length) {
+            toast.error("Cannot save, data not loaded.");
             return null;
         }
+
         setIsLoadingShare(true);
         try {
             const currentTransform = d3.zoomTransform(svgRef.current!);
 
-            const stateToSave: VisualizationState = {
+            // 1. Upload files if Custom DB
+            let fileStorageIds: { synteny?: string; species?: string; reference?: string } | undefined = undefined;
+
+            if (!isUsingExample) {
+                // Upload Synteny
+                const syntenyCSV = generateSyntenyCSV(syntenyData);
+                const syntenyUrl = await generateUploadUrl();
+                const syntenyRes = await fetch(syntenyUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: syntenyCSV });
+                const { storageId: syntenyId } = await syntenyRes.json();
+
+                // Upload Species
+                const speciesCSV = generateSpeciesCSV(speciesData);
+                const speciesUrl = await generateUploadUrl();
+                const speciesRes = await fetch(speciesUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: speciesCSV });
+                const { storageId: speciesId } = await speciesRes.json();
+
+                // Upload Reference
+                let referenceId = undefined;
+                if (referenceData.chromosomeSizes) {
+                    const refCSV = generateReferenceCSV(referenceData.chromosomeSizes);
+                    const refUrl = await generateUploadUrl();
+                    const refRes = await fetch(refUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: refCSV });
+                    const { storageId: refId } = await refRes.json();
+                    referenceId = refId;
+                }
+
+                fileStorageIds = {
+                    synteny: syntenyId,
+                    species: speciesId,
+                    reference: referenceId
+                };
+            }
+
+            // 2. Prepare Visualization State
+            const visualizationState = {
                 version: "1.0",
-                dataSetType: 'shared',
-                syntenyData: syntenyData,
-                speciesData: speciesData,
-                referenceData: referenceData,
-                exampleDataSetPath: isUsingExample ? localStorage.getItem('lastExamplePath') || '/example/set1' : undefined,
-                datasetId: !isUsingExample ? (currentDatasetId ?? undefined) : undefined,
                 selectedSpecies,
                 selectedChromosomes,
                 selectedSyntenyIds: selectedSynteny.map(s => `${s.ref_chr}-${s.query_chr}-${s.ref_start}-${s.query_start}`),
@@ -1202,33 +1162,43 @@ function ChromoVizContent() {
                 isDetailViewOpen,
                 currentSelectedBlockIndex: currentBlockIndex,
                 chordViewConfig: chordViewConfig,
-                user_id: user.id,
             };
 
-            const { data, error } = await supabase
-                .from('shared_visualizations')
-                .insert([{ visualization_state: stateToSave, user_id: user.id, title, is_public: isPublic }])
-                .select()
-                .single();
+            // 3. Save Mutation
+            const vizId = await saveMutation({
+                title,
+                isPublic,
+                dataSetType: isUsingExample ? 'example' : 'custom_db',
+                exampleDataSetPath: isUsingExample ? localStorage.getItem('lastExamplePath') || '/example/set1' : undefined,
+                datasetId: !isUsingExample ? (currentDatasetId ?? undefined) : undefined,
+                files: fileStorageIds,
+                visualizationState
+            });
 
-            if (error) {
-                throw error;
-            }
-
-            if (data?.id) {
-                const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${data.id}`;
-                toast.success("Shareable link generated and copied to clipboard!");
+            if (isPublic) {
+                const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${vizId}`;
+                toast.success("Shareable link generated!");
                 return shareUrl;
+            } else {
+                toast.success("Visualization saved successfully!");
+                return null;
             }
-            return null;
-        } catch (e) {
-            console.error("Error sharing visualization:", e);
-            const errorMessage = e instanceof Error ? e.message : "Failed to create shareable link.";
-            toast.error(errorMessage);
+
+        } catch (e: any) {
+            console.error("Error saving visualization:", e);
+            toast.error("Failed to save: " + e.message);
             return null;
         } finally {
             setIsLoadingShare(false);
         }
+    };
+
+    const handleShare = async (title: string, isPublic: boolean): Promise<string | null> => {
+        return handleSaveOrShare(title, isPublic);
+    };
+
+    const handleSave = async (title: string): Promise<string | null> => {
+        return handleSaveOrShare(title, false);
     };
 
     if (error) {
@@ -1296,6 +1266,7 @@ function ChromoVizContent() {
                                         onResetToWelcome={handleResetToWelcome}
                                         speciesData={speciesData}
                                         onShare={handleShare}
+                                        onSave={handleSave}
                                         user={user}
                                         isDetailViewOpen={isDetailViewOpen}
                                         onToggleDetailView={() => setIsDetailViewOpen(prev => !prev)}

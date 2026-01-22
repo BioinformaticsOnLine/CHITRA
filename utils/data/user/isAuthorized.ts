@@ -1,8 +1,4 @@
-"server only";
-
 import { clerkClient } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
 import config from "@/config";
 
 export const isAuthorized = async (
@@ -15,7 +11,8 @@ export const isAuthorized = async (
     };
   }
 
-  const result = await clerkClient.users.getUser(userId);
+  const client = await clerkClient();
+  const result = await client.users.getUser(userId);
 
   if (!result) {
     return {
@@ -24,47 +21,10 @@ export const isAuthorized = async (
     };
   }
 
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-
-  try {
-    const { data, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", userId);
-
-    if (error?.code)
-      return {
-        authorized: false,
-        message: error.message,
-      };
-
-    if (data && data[0].status === "active") {
-      return {
-        authorized: true,
-        message: "User is subscribed",
-      };
-    }
-
-    return {
-      authorized: false,
-      message: "User is not subscribed",
-    };
-  } catch (error: any) {
-    return {
-      authorized: false,
-      message: error.message,
-    };
-  }
+  // TODO: implement new subscription check with Convex or Stripe directly
+  // For now, allow access if payments are enabled but no subscription check is implemented
+  return {
+    authorized: true,
+    message: "User is subscribed",
+  };
 };

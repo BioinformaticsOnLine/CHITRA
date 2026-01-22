@@ -13,7 +13,7 @@ import {
     DropdownMenuShortcut,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { UserResource } from "@clerk/types";
 import {
     LogOut,
     Settings,
@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-export function UserProfile({ user, onSignOut }: { user: SupabaseUser | null; onSignOut: () => void; }) {
+export function UserProfile({ user, onSignOut }: { user: UserResource | null | undefined; onSignOut: () => void; }) {
     if (!user) {
         return null;
     }
@@ -30,12 +30,12 @@ export function UserProfile({ user, onSignOut }: { user: SupabaseUser | null; on
         <DropdownMenu>
             <DropdownMenuTrigger asChild className="w-9 h-9">
                 <Avatar>
-                    <AvatarImage src={user.user_metadata.avatar_url} alt="User Profile" />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    <AvatarImage src={user.imageUrl} alt="User Profile" />
+                    <AvatarFallback>{user.firstName?.[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>{user.user_metadata.full_name || user.email}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.fullName || user.primaryEmailAddress?.emailAddress}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <Link href="/user-profile">

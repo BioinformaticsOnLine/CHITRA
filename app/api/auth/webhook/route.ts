@@ -1,5 +1,3 @@
-import { userCreate } from "@/utils/data/user/userCreate";
-import { userUpdate } from "@/utils/data/user/userUpdate";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
@@ -55,57 +53,8 @@ export async function POST(req: Request) {
   const { id } = evt.data;
   const eventType = evt.type;
 
+  console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
+  // console.log('Webhook body:', body)
 
-  switch (eventType) {
-    case "user.created":
-      try {
-        await userCreate({
-          email: payload?.data?.email_addresses?.[0]?.email_address,
-          first_name: payload?.data?.first_name,
-          last_name: payload?.data?.last_name,
-          profile_image_url: payload?.data?.profile_image_url,
-          user_id: payload?.data?.id,
-        });
-
-        return NextResponse.json({
-          status: 200,
-          message: "User info inserted",
-        });
-      } catch (error: any) {
-        return NextResponse.json({
-          status: 400,
-          message: error.message,
-        });
-      }
-      break;
-
-    case "user.updated":
-      try {
-        await userUpdate({
-          email: payload?.data?.email_addresses?.[0]?.email_address,
-          first_name: payload?.data?.first_name,
-          last_name: payload?.data?.last_name,
-          profile_image_url: payload?.data?.profile_image_url,
-          user_id: payload?.data?.id,
-        });
-
-        return NextResponse.json({
-          status: 200,
-          message: "User info updated",
-        });
-      } catch (error: any) {
-        return NextResponse.json({
-          status: 400,
-          message: error.message,
-        });
-      }
-      break;
-
-    default:
-      return new Response("Error occured -- unhandeled event type", {
-        status: 400,
-      });
-  }
-
-  return new Response("", { status: 201 });
+  return new Response("", { status: 200 });
 }

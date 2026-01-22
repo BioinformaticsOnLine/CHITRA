@@ -1,4 +1,5 @@
 node_modules
+
 # Logs
 logs
 *.log
@@ -26,6 +27,8 @@ coverage
 
 # nyc test coverage
 .nyc_output
+
+.next
 
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
@@ -72,6 +75,9 @@ web_modules/
 
 # Yarn Integrity file
 .yarn-integrity
+
+.env.local
+
 
 # dotenv environment variable files
 .env

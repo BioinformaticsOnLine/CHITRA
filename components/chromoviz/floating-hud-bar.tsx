@@ -33,7 +33,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FilterDrawer } from '@/components/chromoviz/filter-drawer';
@@ -44,10 +43,10 @@ import { DataViewerDrawer } from "./data-viewer-drawer";
 import { cn } from "@/lib/utils";
 import { ChromosomeData, SyntenyData } from "@/app/types";
 import { useTheme } from "next-themes";
-import { User } from "@supabase/supabase-js";
+
 
 interface FloatingHUDBarProps {
-  user: User | null;
+  user?: any; // Deprecated, handled internally by Clerk
   onLoadExample: (path: string) => void;
   selectedSpecies: string[];
   setSelectedSpecies: (species: string[]) => void;
@@ -74,6 +73,7 @@ interface FloatingHUDBarProps {
   onResetToWelcome: () => void;
   speciesData?: ChromosomeData[];
   onShare: (title: string, isPublic: boolean) => Promise<string | null>;
+  onSave: (title: string) => Promise<string | null>;
   isDetailViewOpen: boolean;
   onToggleDetailView: () => void;
   selectedSynteny: SyntenyData[];
@@ -102,6 +102,7 @@ export function FloatingHUDBar({
   onResetToWelcome,
   speciesData,
   onShare,
+  onSave,
   isDetailViewOpen,
   onToggleDetailView,
   selectedSynteny,
@@ -118,11 +119,7 @@ export function FloatingHUDBar({
   const router = useRouter();
 
   // Memoized handlers
-  const handleSignOut = useCallback(async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-    toast.success("You have been signed out.");
-  }, [router]);
+  // handleSignOut removed as it is handled by Clerk components internally
 
   const toggleLayout = useCallback(() => {
     setForceVertical(!forceVertical);
@@ -260,9 +257,9 @@ export function FloatingHUDBar({
             {/* User Profile / Sign In Button */}
             <div className="relative">
               <UserActions
-                user={user}
-                onSignOut={handleSignOut}
+                onSignOut={() => { }} // Handled by Clerk UserButton
                 onShare={onShare}
+                onSave={onSave}
                 isVertical={isVertical}
               />
             </div>

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react"
 import ModeToggle from '@/components/mode-toggle'
 import { UserActions } from '@/components/chromoviz/user-actions'
 import config from '@/config'
-import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, MoreHorizontal, Loader2 } from 'lucide-react'
+import { ChevronRight, HomeIcon, Info, BookOpen, FileText, Copy, MoreHorizontal, Loader2, Check } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import clsx from 'clsx'
@@ -14,14 +14,15 @@ import { AboutSheet } from "@/components/chromoviz/about"
 import { GuideSheet } from "@/components/chromoviz/guide"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { supabase } from "@/lib/supabaseClient"
-import { User } from "@supabase/supabase-js"
+import { useUser, useClerk } from "@clerk/nextjs";
 
 const CITATION = `Pruthi, P., Narayan, J., Agarwal, P., Shukla, N., & Bhatia, A. (2024). CHITRA: Chromosome Interactive Tool for Rearrangement Analysis. CSIR-IGIB.`
 
 function Breadcrumbs() {
   const pathname = usePathname()
   const paths = pathname.split('/').filter(Boolean)
+
+  if (paths.length === 0) return null
 
   return (
     <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -51,6 +52,34 @@ function Breadcrumbs() {
   )
 }
 
+function NavButton({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+    router.push(href)
+  }
+
+  return (
+    <Link href={href} onClick={handleClick}>
+      <Button
+        variant="ghost"
+        className="h-8 w-auto hover:bg-background/80 text-sm p-2"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Icon className="h-4 w-4" />
+        )}
+        <span className="ml-2">{children}</span>
+      </Button>
+    </Link>
+  )
+}
+
 function CopyButton() {
   const handleCopy = async () => {
     try {
@@ -77,34 +106,6 @@ function CopyButton() {
       <Copy className="h-4 w-4" />
       <span className="hidden sm:inline-block sm:ml-2">Cite</span>
     </Button>
-  )
-}
-
-function NavButton({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault()
-    setIsLoading(true)
-    router.push(href)
-  }
-
-  return (
-    <Link href={href} onClick={handleClick}>
-      <Button
-        variant="ghost"
-        className="h-8 w-auto hover:bg-background/80 text-sm p-2"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Icon className="h-4 w-4" />
-        )}
-        <span className="ml-2">{children}</span>
-      </Button>
-    </Link>
   )
 }
 
@@ -216,36 +217,15 @@ export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
   const isHomePage = pathname === '/'
-  const [user, setUser] = useState<User | null>(null)
+  // const [user, setUser] = useState<User | null>(null)
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-      } catch (error) {
-        // Silently handle auth session fetch errors (network issues, etc.)
-        console.warn('Auth session fetch failed:', error);
-        setUser(null);
-      }
-    };
-    fetchUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        router.refresh();
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router]);
+  // Removed Supabase auth listeners
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     router.push('/');
     toast.success("You have been signed out.");
   };
@@ -334,7 +314,7 @@ export default function NavBar() {
             )}
             <div className="flex items-center gap-1 sm:gap-2">
               {config?.auth?.enabled && (
-                <UserActions user={user} onSignOut={handleSignOut} onShare={async () => null} />
+                <UserActions onSignOut={handleSignOut} onShare={async () => null} onSave={async () => null} />
               )}
               <ModeToggle />
               <GetStartedButton />
