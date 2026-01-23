@@ -18,6 +18,7 @@ export interface ConfigProps {
   annotationHeight: number;
   maxVisibleGenes: number;
   customSpeciesColors: Map<string, string>;
+  widthScale?: number;
 }
 
 interface SettingsPanelProps {
@@ -114,6 +115,17 @@ export const SettingsPanel = ({
                   number={config.chromosomeHeight}
                   setNumber={(value) => onConfigChange({ chromosomeHeight: value })}
                   className="h-7"
+                />
+              </div>
+              <div className="grid grid-cols-2 items-center gap-2">
+                <Label htmlFor="widthScale" className="text-sm">Width Scale (%)</Label>
+                <Counter
+                  number={config.widthScale || 100}
+                  setNumber={(value) => onConfigChange({ widthScale: value })}
+                  className="h-7"
+                  min={20}
+                  max={200}
+                  step={10}
                 />
               </div>
               <div className="grid grid-cols-2 items-center gap-2">

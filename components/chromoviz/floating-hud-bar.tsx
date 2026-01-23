@@ -77,10 +77,12 @@ interface FloatingHUDBarProps {
   isDetailViewOpen: boolean;
   onToggleDetailView: () => void;
   selectedSynteny: SyntenyData[];
+
   onToggleSelection: (link: SyntenyData) => void;
   onSelectBlock?: (link: SyntenyData) => void;
   currentBlockIndex?: number;
   onExport?: (data: SyntenyData[]) => void;
+  showConnectedOnly: boolean;
 }
 
 export function FloatingHUDBar({
@@ -110,9 +112,11 @@ export function FloatingHUDBar({
   onSelectBlock,
   currentBlockIndex = 0,
   onExport,
+  showConnectedOnly,
 }: FloatingHUDBarProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+
   const [isVertical, setIsVertical] = useState(false);
   const [forceVertical, setForceVertical] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -366,6 +370,7 @@ export function FloatingHUDBar({
                         chromosomeOptions={chromosomeOptions}
                         referenceGenomeData={referenceGenomeData}
                         syntenyData={syntenyData}
+                        showConnectedOnly={showConnectedOnly}
                       >
                         <Button
                           variant="ghost"

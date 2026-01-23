@@ -35,6 +35,7 @@ export default defineSchema({
             // Storing maps as arrays of entries
             selectedMutationTypes: v.array(v.array(v.any())),
             customSpeciesColors: v.array(v.array(v.string())),
+            selectedSynteny: v.optional(v.array(v.any())),
 
             mainViewTransform: v.object({ k: v.number(), x: v.number(), y: v.number() }),
             showAnnotations: v.boolean(),

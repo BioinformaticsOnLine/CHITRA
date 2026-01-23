@@ -185,8 +185,8 @@ export const ControlsMenu = ({
         <div className="flex items-center gap-1.5">
           <Switch
             id="show-connected-only"
-            checked={!showConnectedOnly}
-            onCheckedChange={() => setShowConnectedOnly(!showConnectedOnly)}
+            checked={showConnectedOnly}
+            onCheckedChange={setShowConnectedOnly}
           />
           <Label htmlFor="show-connected-only" className="text-xs whitespace-nowrap">Linked Only</Label>
         </div>
@@ -393,8 +393,8 @@ export const ControlsMenu = ({
                   <Label htmlFor="show-connected-only-mobile">Linked Only</Label>
                   <Switch
                     id="show-connected-only-mobile"
-                    checked={!showConnectedOnly}
-                    onCheckedChange={() => setShowConnectedOnly(!showConnectedOnly)}
+                    checked={showConnectedOnly}
+                    onCheckedChange={setShowConnectedOnly}
                   />
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setShowSettingsPanel(true)}>

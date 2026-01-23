@@ -16,6 +16,9 @@ type CounterProps = HTMLMotionProps<'div'> & {
   slidingNumberProps?: Omit<SlidingNumberProps, 'number'>;
   buttonProps?: Omit<React.ComponentProps<typeof Button>, 'onClick'>;
   transition?: Transition;
+  min?: number;
+  max?: number;
+  step?: number;
 };
 
 function Counter({
@@ -25,6 +28,9 @@ function Counter({
   slidingNumberProps,
   buttonProps,
   transition = { type: 'spring', bounce: 0, stiffness: 300, damping: 30 },
+  min,
+  max,
+  step = 1,
   ...props
 }: CounterProps) {
   const [isEditing, setIsEditing] = React.useState(false);
@@ -34,9 +40,17 @@ function Counter({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (isEditing) return;
     if (event.key === 'ArrowUp' || event.key === 'ArrowRight') {
-      setNumber(number + 1);
+      const stepVal = step || 1;
+      const nextVal = number + stepVal;
+      if (max === undefined || nextVal <= max) {
+        setNumber(nextVal);
+      }
     } else if (event.key === 'ArrowDown' || event.key === 'ArrowLeft') {
-      setNumber(number - 1);
+      const stepVal = step || 1;
+      const nextVal = number - stepVal;
+      if (min === undefined || nextVal >= min) {
+        setNumber(nextVal);
+      }
     }
   };
 
@@ -45,8 +59,10 @@ function Counter({
   };
 
   const handleInputBlur = () => {
-    const newNumber = parseInt(inputValue, 10);
+    let newNumber = parseInt(inputValue, 10);
     if (!isNaN(newNumber)) {
+      if (min !== undefined) newNumber = Math.max(min, newNumber);
+      if (max !== undefined) newNumber = Math.min(max, newNumber);
       setNumber(newNumber);
     }
     setIsEditing(false);
@@ -91,9 +107,15 @@ function Counter({
         <Button
           size="icon"
           {...buttonProps}
-          onClick={() => setNumber(number - 1)}
+          onClick={() => {
+            const nextVal = number - step;
+            if (min === undefined || nextVal >= min) {
+              setNumber(nextVal);
+            }
+          }}
+          disabled={min !== undefined && number <= min}
           className={cn(
-            'bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px]',
+            'bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px] disabled:opacity-50 disabled:cursor-not-allowed',
             buttonProps?.className,
           )}
         >
@@ -128,9 +150,15 @@ function Counter({
         <Button
           size="icon"
           {...buttonProps}
-          onClick={() => setNumber(number + 1)}
+          onClick={() => {
+            const nextVal = number + step;
+            if (max === undefined || nextVal <= max) {
+              setNumber(nextVal);
+            }
+          }}
+          disabled={max !== undefined && number >= max}
           className={cn(
-            'bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px]',
+            'bg-white dark:bg-neutral-950 hover:bg-white/70 dark:hover:bg-neutral-950/70 text-neutral-950 dark:text-white text-2xl font-light pb-[3px] disabled:opacity-50 disabled:cursor-not-allowed',
             buttonProps?.className,
           )}
         >

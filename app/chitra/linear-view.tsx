@@ -621,9 +621,14 @@ export function ChromosomeSynteny({
     const maxChrSize = d3.max(referenceData, d => d.chr_size_bp) || 0;
     const maxSyntenySize = d3.max(syntenyData, d => d.ref_end - d.ref_start) || 0;
     const maxSyntenySizeMb = maxSyntenySize / 1_000_000;
+
+    // Apply width scaling from config (percentage to decimal)
+    const widthMultiplier = (config.widthScale || 100) / 100;
+    const effectiveWidth = (innerWidth - 100) * widthMultiplier;
+
     const xScale = d3.scaleLinear()
       .domain([0, maxChrSize])
-      .range([0, innerWidth - 100]); // Leave space for labels
+      .range([0, effectiveWidth]); // Leave space for labels and apply scaling
 
     // Modify the species color scale to use custom colors
     const speciesColorScale = d3.scaleOrdinal<string>()

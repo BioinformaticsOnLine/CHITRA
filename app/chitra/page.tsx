@@ -46,6 +46,7 @@ export interface VisualizationState {
     isDetailViewOpen?: boolean;
     currentSelectedBlockIndex?: number;
     chordViewConfig?: any;
+    selectedSynteny?: any[];
 }
 import { useTheme } from "next-themes";
 import { motion } from "motion/react";
@@ -440,6 +441,7 @@ function ChromoVizContent() {
         annotationHeight: GENE_ANNOTATION_CONFIG.HEIGHT,
         maxVisibleGenes: OPTIMIZATION_CONFIG.MAX_VISIBLE_GENES,
         customSpeciesColors: new Map(),
+        widthScale: 100,
     });
 
     const handleConfigChange = useCallback((newConfig: Partial<ConfigProps>) => {
@@ -452,6 +454,7 @@ function ChromoVizContent() {
             chromosomeHeight: CHROMOSOME_CONFIG.HEIGHT,
             chromosomeSpacing: CHROMOSOME_CONFIG.SPACING,
             annotationHeight: GENE_ANNOTATION_CONFIG.HEIGHT,
+            widthScale: 100,
         }));
         toast.success("Layout settings have been reset to default.");
     }, []);
@@ -1070,6 +1073,7 @@ function ChromoVizContent() {
                     if (vizState.showTooltips !== undefined) setShowTooltips(vizState.showTooltips);
                     if (vizState.isDetailViewOpen !== undefined) setIsDetailViewOpen(vizState.isDetailViewOpen);
                     if (vizState.currentSelectedBlockIndex !== undefined) setCurrentBlockIndex(vizState.currentSelectedBlockIndex);
+                    if (vizState.selectedSynteny) setSelectedSynteny(vizState.selectedSynteny);
                 }
 
                 toast.success("Visualization loaded!");
@@ -1162,6 +1166,7 @@ function ChromoVizContent() {
                 isDetailViewOpen,
                 currentSelectedBlockIndex: currentBlockIndex,
                 chordViewConfig: chordViewConfig,
+                selectedSynteny,
             };
 
             // 3. Save Mutation
@@ -1287,6 +1292,7 @@ function ChromoVizContent() {
                                             data,
                                             `synteny-blocks-${new Date().toISOString().split('T')[0]}.csv`
                                         )}
+                                        showConnectedOnly={showConnectedOnly}
                                     />
 
                                     {/* Responsive Layout for Visualization and Details */}
@@ -1360,6 +1366,7 @@ function ChromoVizContent() {
                                                 ) : syntenyData.length > 0 && referenceData && !showWelcomeCard ? ( // Added referenceData check
                                                     <div className="flex-1 min-h-0">
                                                         <ChromosomeSynteny
+                                                            key={filteredData.referenceData.map(d => d.chr_id).join(',')}
                                                             referenceData={filteredData.referenceData}
                                                             syntenyData={filteredData.syntenyData}
                                                             referenceGenomeData={referenceData}
