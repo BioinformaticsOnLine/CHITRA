@@ -242,7 +242,96 @@ export default function HeroSection() {
                 </div>
             </div>
 
-            {/* Workflow Section - Right after Get Started */}
+            {/* Video Carousel Section - Moved Above Workflow */}
+            <div className="relative z-10 py-12">
+                <div className="container mx-auto px-4">
+                    <motion.div
+                        className="relative w-full max-w-6xl mx-auto aspect-[16/9] cursor-pointer"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                        <div className="relative h-full w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-sm bg-white/5">
+                            <ProgressSlider
+                                activeSlider={videos[0].id}
+                                duration={10000}
+                                className="w-full h-full"
+                                items={videos}
+                            >
+                                <div className="relative h-full">
+                                    {videos.map((video) => (
+                                        <SliderWrapper
+                                            key={video.id}
+                                            value={video.id}
+                                            className="absolute inset-0"
+                                            onClick={() => setFullscreenVideo(video)}
+                                        >
+                                            <video
+                                                suppressHydrationWarning={true}
+                                                autoPlay
+                                                muted
+                                                loop
+                                                playsInline
+                                                className="w-full h-full object-cover"
+                                                onLoadedData={(e) => {
+                                                    const videoElement = e.target as HTMLVideoElement;
+                                                    switch (video.id) {
+                                                        case 'v1':
+                                                            videoElement.currentTime = 15;
+                                                            break;
+                                                        case 'v2':
+                                                            videoElement.currentTime = 23;
+                                                            break;
+                                                        case 'v3':
+                                                            videoElement.currentTime = 23;
+                                                            break;
+                                                        case 'v4':
+                                                            videoElement.currentTime = 13;
+                                                            break;
+                                                        default:
+                                                            videoElement.currentTime = 0;
+                                                    }
+                                                }}
+                                            >
+                                                <source src={video.src} type="video/mp4" />
+                                            </video>
+                                        </SliderWrapper>
+                                    ))}
+                                </div>
+
+                                <SliderBtnGroup className="px-2 sm:px-4">
+                                    {videos.map((video) => (
+                                        <SliderBtn
+                                            key={video.id}
+                                            value={video.id}
+                                            className={cn(
+                                                "text-center p-2 lg:p-3 rounded-xl",
+                                                "hover:bg-white/10 transition-colors",
+                                                "w-full sm:w-[180px] lg:w-[220px] xl:w-[250px]",
+                                                "flex flex-col gap-1"
+                                            )}
+                                            progressBarClass="bg-blue-500 h-0.5"
+                                        >
+                                            <h3 className={cn(
+                                                "text-white font-medium",
+                                                "text-xs sm:text-sm lg:text-base",
+                                                "px-1",
+                                                "whitespace-normal",
+                                                "min-h-[2.5em]",
+                                                "flex items-center justify-center"
+                                            )}>
+                                                {video.title}
+                                            </h3>
+                                        </SliderBtn>
+                                    ))}
+                                </SliderBtnGroup>
+                            </ProgressSlider>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Workflow Section - Right after Video Carousel */}
             <div className="relative z-10 py-8 bg-white/5 backdrop-blur-sm">
                 <div className="container mx-auto px-4">
                     <h2 className="text-3xl font-bold text-center mb-8">
@@ -376,95 +465,6 @@ export default function HeroSection() {
                             </Link>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {/* Video Carousel Section - Below Workflow */}
-            <div className="relative z-10 py-12">
-                <div className="container mx-auto px-4">
-                    <motion.div
-                        className="relative w-full max-w-6xl mx-auto aspect-[16/9] cursor-pointer"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                    >
-                        <div className="relative h-full w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-sm bg-white/5">
-                            <ProgressSlider
-                                activeSlider={videos[0].id}
-                                duration={10000}
-                                className="w-full h-full"
-                                items={videos}
-                            >
-                                <div className="relative h-full">
-                                    {videos.map((video) => (
-                                        <SliderWrapper
-                                            key={video.id}
-                                            value={video.id}
-                                            className="absolute inset-0"
-                                            onClick={() => setFullscreenVideo(video)}
-                                        >
-                                            <video
-                                                suppressHydrationWarning={true}
-                                                autoPlay
-                                                muted
-                                                loop
-                                                playsInline
-                                                className="w-full h-full object-cover"
-                                                onLoadedData={(e) => {
-                                                    const videoElement = e.target as HTMLVideoElement;
-                                                    switch (video.id) {
-                                                        case 'v1':
-                                                            videoElement.currentTime = 15;
-                                                            break;
-                                                        case 'v2':
-                                                            videoElement.currentTime = 23;
-                                                            break;
-                                                        case 'v3':
-                                                            videoElement.currentTime = 23;
-                                                            break;
-                                                        case 'v4':
-                                                            videoElement.currentTime = 13;
-                                                            break;
-                                                        default:
-                                                            videoElement.currentTime = 0;
-                                                    }
-                                                }}
-                                            >
-                                                <source src={video.src} type="video/mp4" />
-                                            </video>
-                                        </SliderWrapper>
-                                    ))}
-                                </div>
-
-                                <SliderBtnGroup className="px-2 sm:px-4">
-                                    {videos.map((video) => (
-                                        <SliderBtn
-                                            key={video.id}
-                                            value={video.id}
-                                            className={cn(
-                                                "text-center p-2 lg:p-3 rounded-xl",
-                                                "hover:bg-white/10 transition-colors",
-                                                "w-full sm:w-[180px] lg:w-[220px] xl:w-[250px]",
-                                                "flex flex-col gap-1"
-                                            )}
-                                            progressBarClass="bg-blue-500 h-0.5"
-                                        >
-                                            <h3 className={cn(
-                                                "text-white font-medium",
-                                                "text-xs sm:text-sm lg:text-base",
-                                                "px-1",
-                                                "whitespace-normal",
-                                                "min-h-[2.5em]",
-                                                "flex items-center justify-center"
-                                            )}>
-                                                {video.title}
-                                            </h3>
-                                        </SliderBtn>
-                                    ))}
-                                </SliderBtnGroup>
-                            </ProgressSlider>
-                        </div>
-                    </motion.div>
                 </div>
             </div>
 
