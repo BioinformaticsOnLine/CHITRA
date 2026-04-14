@@ -36,16 +36,16 @@ function downloadCSV(data: SyntenyData[], filename: string) {
   ]
 
   const rows = data.map(link => [
-    link.ref_name,
-    link.ref_chr,
-    (link.ref_start / 1_000_000).toFixed(2),
-    (link.ref_end / 1_000_000).toFixed(2),
-    link.query_name,
-    link.query_chr,
-    (link.query_start / 1_000_000).toFixed(2),
-    (link.query_end / 1_000_000).toFixed(2),
-    ((link.ref_end - link.ref_start) / 1_000_000).toFixed(2),
-    link.query_strand === '+' ? 'Forward' : 'Reverse'
+    link.ref_name || 'N/A',
+    link.ref_chr || 'N/A',
+    link.ref_start != null ? (link.ref_start / 1_000_000).toFixed(2) : 'N/A',
+    link.ref_end != null ? (link.ref_end / 1_000_000).toFixed(2) : 'N/A',
+    link.query_name || 'N/A',
+    link.query_chr || 'N/A',
+    link.query_start != null ? (link.query_start / 1_000_000).toFixed(2) : 'N/A',
+    link.query_end != null ? (link.query_end / 1_000_000).toFixed(2) : 'N/A',
+    (link.ref_end != null && link.ref_start != null) ? ((link.ref_end - link.ref_start) / 1_000_000).toFixed(2) : 'N/A',
+    link.query_strand === '+' ? 'Forward' : (link.query_strand === '-' ? 'Reverse' : 'N/A')
   ])
 
   const csvContent = [
@@ -195,7 +195,7 @@ export function InlineSyntenyDisplay({
                       >
                         <div className={cn("flex items-center gap-1.5", isCompact && "gap-1")}>
                           <span className={cn("font-medium tracking-tight text-sm", isCompact && "text-xs truncate max-w-[100px]")}>
-                            {link.ref_name} {link.ref_chr}
+                            {link.ref_name || 'N/A'} {link.ref_chr || 'N/A'}
                           </span>
                           <ChevronRight className={cn(
                             "h-3.5 w-3.5 shrink-0", 
@@ -205,7 +205,7 @@ export function InlineSyntenyDisplay({
                             isCompact && "h-3 w-3"
                           )} />
                           <span className={cn("font-medium tracking-tight text-sm", isCompact && "text-xs truncate max-w-[100px]")}>
-                            {link.query_name} {link.query_chr}
+                            {link.query_name || 'N/A'} {link.query_chr || 'N/A'}
                           </span>
                         </div>
                         
@@ -219,13 +219,13 @@ export function InlineSyntenyDisplay({
                           <div className="flex items-center gap-1.5">
                             <span className={cn("uppercase tracking-wider opacity-70", isCompact && "hidden sm:inline")}>Pos:</span>
                             <span className="font-mono">
-                              {(link.ref_start / 1_000_000).toFixed(isCompact ? 0 : 1)}-{(link.ref_end / 1_000_000).toFixed(isCompact ? 0 : 1)} Mb
+                              {link.ref_start != null ? (link.ref_start / 1_000_000).toFixed(isCompact ? 0 : 1) : 'N/A'}-{link.ref_end != null ? (link.ref_end / 1_000_000).toFixed(isCompact ? 0 : 1) : 'N/A'} Mb
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className={cn("uppercase tracking-wider opacity-70", isCompact && "hidden sm:inline")}>Size:</span>
                             <span className="font-mono">
-                              {((link.ref_end - link.ref_start) / 1_000_000).toFixed(isCompact ? 0 : 1)} Mb
+                              {(link.ref_end != null && link.ref_start != null) ? ((link.ref_end - link.ref_start) / 1_000_000).toFixed(isCompact ? 0 : 1) : 'N/A'} Mb
                             </span>
                           </div>
                           {!isCompact && (

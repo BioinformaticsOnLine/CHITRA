@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, RefObject } from "react";
 import * as d3 from "d3";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeftRight, ArrowRight, ArrowLeft, Settings2, MoreVertical, Image, Palette, ZoomIn, ZoomOut, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, Lock, Unlock, ArrowUp, ArrowDown, ArrowUpDown, ArrowLeftRight, ArrowRight, ArrowLeft, Settings2, MoreVertical, Image, Palette, ZoomIn, ZoomOut, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
 import { ChromosomeData, SyntenyData, ReferenceGenomeData, ChromosomeBreakpoint } from "../types";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "use-debounce";
@@ -33,6 +33,8 @@ import { ControlsMenu } from "@/components/chromoviz/controls-menu";
 import { MutationTypeDataDrawer } from "@/components/chromoviz/mutation-type-data-drawer";
 import { MutationType, MUTATION_COLORS, mutationFullNames } from "@/components/chromoviz/synteny-ribbon";
 import { ConfigProps } from "@/components/chromoviz/settings-panel";
+import { useAccessibility } from "@/components/chromoviz/accessibility-context";
+import { toast } from "sonner";
 
 // First, add these type definitions at the top
 type D3Selection = d3.Selection<SVGSVGElement, unknown, null, undefined>;
@@ -100,6 +102,8 @@ interface ChromosomeSyntenyProps {
   config: ConfigProps;
   onConfigChange: (newConfig: Partial<ConfigProps>) => void;
   onResetLayout: () => void;
+  chromosomeOrder?: Map<string, string[]>;
+  onChromosomeOrderChange?: (newOrder: Map<string, string[]>) => void;
 }
 
 const ZOOM_LEVELS = {
@@ -142,9 +146,12 @@ export function ChromosomeSynteny({
   setShowConnectedOnly,
   config,
   onConfigChange,
-  onResetLayout
+  onResetLayout,
+  chromosomeOrder = new Map(),
+  onChromosomeOrderChange,
 }: ChromosomeSyntenyProps) {
   const [zoom, setZoom] = useState(1);
+  const [isZoomUnlocked, setIsZoomUnlocked] = useState(false);
   const [customMutationTypes, setCustomMutationTypes] = useState<Record<string, string>>({});
   const [isMutationDrawerOpen, setIsMutationDrawerOpen] = useState(false);
   const [tooltipInfo, setTooltipInfo] = useState<TooltipInfo | null>(null);
@@ -177,7 +184,14 @@ export function ChromosomeSynteny({
     }
   }, []);
 
-  const allMutationColors = { ...MUTATION_COLORS, ...customMutationTypes };
+  const { colorBlindMode, getMutationColors, getSpeciesPalette } = useAccessibility();
+
+  const accessibleMutationColors = getMutationColors();
+  const accessibleSpeciesPalette = getSpeciesPalette();
+
+  const allMutationColors = colorBlindMode !== 'none'
+    ? { ...accessibleMutationColors, ...customMutationTypes }
+    : { ...MUTATION_COLORS, ...customMutationTypes };
   const customFullNames = Object.keys(customMutationTypes).reduce((acc, key) => {
     const words = key.toLowerCase().split(' ');
     const formattedName = words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -244,6 +258,23 @@ export function ChromosomeSynteny({
 
   useEventListener('fullscreenchange' as keyof WindowEventMap, handleFullscreenChange);
   useEventListener('resize', handleResize);
+
+  // Fallback for Safari which often ignores overscroll-behavior-x
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // If primarily horizontal scrolling, prevent default swipe-to-navigate
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+      }
+    };
+
+    // Needs to be passive: false to allow preventDefault
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [containerRef]);
 
   const toggleFullscreen = async () => {
     try {
@@ -603,9 +634,21 @@ export function ChromosomeSynteny({
       connectedChrIds.add(`${link.query_name}:${link.query_chr}`);
     });
 
-    const displayedReferenceData = showConnectedOnly
+    const displayedReferenceData = (showConnectedOnly
       ? referenceData.filter(chr => connectedChrIds.has(`${chr.species_name}:${chr.chr_id}`))
-      : referenceData;
+      : [...referenceData])
+      .sort((a, b) => {
+        if (a.species_name !== b.species_name) return 0;
+        const customOrder = chromosomeOrder.get(a.species_name);
+        if (!customOrder || customOrder.length === 0) return 0;
+
+        const aIdx = customOrder.indexOf(a.chr_id);
+        const bIdx = customOrder.indexOf(b.chr_id);
+        if (aIdx === -1 && bIdx === -1) return 0;
+        if (aIdx === -1) return 1;
+        if (bIdx === -1) return -1;
+        return aIdx - bIdx;
+      });
 
     // Group data by species
     const speciesGroups = d3.group(displayedReferenceData, d => d.species_name);
@@ -634,7 +677,7 @@ export function ChromosomeSynteny({
     const speciesColorScale = d3.scaleOrdinal<string>()
       .domain(uniqueSpecies)
       .range(uniqueSpecies.map(species =>
-        customSpeciesColors?.get(species) || d3.schemePastel1[uniqueSpecies.indexOf(species) % d3.schemePastel1.length]
+        customSpeciesColors?.get(species) || accessibleSpeciesPalette[uniqueSpecies.indexOf(species) % accessibleSpeciesPalette.length]
       ));
 
     // Get reference species from synteny data
@@ -768,7 +811,7 @@ export function ChromosomeSynteny({
 
     // Create zoom behavior
     const zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.5, 5])
+      .scaleExtent(isZoomUnlocked ? [0.0001, 1000] : [0.01, 15])
       .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
         const g = svg.select("g");
         // Convert the transform object to a string representation
@@ -786,7 +829,7 @@ export function ChromosomeSynteny({
 
     // Add proper typing for the chromosome zoom behavior
     const chromosomeZoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 20])
+      .scaleExtent(isZoomUnlocked ? [0.0001, 1000] : [0.01, 15])
       .on("zoom", (event) => {
         const transform = event.transform;
         g.selectAll(".chromosome-body")
@@ -864,7 +907,11 @@ export function ChromosomeSynteny({
     selectedMutationTypes,
     onMutationTypeSelect,
     customSpeciesColors,
-    showConnectedOnly
+    colorBlindMode,
+    accessibleSpeciesPalette,
+    showConnectedOnly,
+    chromosomeOrder,
+    isZoomUnlocked
   ]);
 
   // Update effect for selection changes
@@ -1096,9 +1143,9 @@ export function ChromosomeSynteny({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full relative select-none"
+      className="w-full h-full relative select-none overscroll-none"
       style={{
-        overflow: isFullscreen ? 'visible' : 'auto',
+        overflow: 'hidden',
         WebkitUserSelect: 'none',
         MozUserSelect: 'none',
         msUserSelect: 'none',
@@ -1225,9 +1272,30 @@ export function ChromosomeSynteny({
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <div className="flex items-center justify-center">
-                  <Circle className="h-4 w-4 opacity-60" />
-                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={isZoomUnlocked ? "Lock zoom limits" : "Unlock zoom limits"}
+                  onClick={() => {
+                    setIsZoomUnlocked(!isZoomUnlocked);
+                    toast.success(isZoomUnlocked ? "Zoom limits restored" : "Zoom limits unlocked!", {
+                      description: isZoomUnlocked ? "Scale restricted to 1% - 1500%" : "Unrestricted zoom enabled.",
+                      duration: 3000,
+                    });
+                  }}
+                  className={cn(
+                    "h-7 w-7 transition-all duration-200",
+                    isZoomUnlocked
+                      ? "bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.3)] border-blue-500/50 text-blue-600"
+                      : "opacity-60 hover:opacity-100"
+                  )}
+                >
+                  {isZoomUnlocked ? (
+                    <Unlock className="h-3.5 w-3.5 animate-pulse" />
+                  ) : (
+                    <Lock className="h-3.5 w-3.5" />
+                  )}
+                </Button>
                 <Button
                   variant="outline"
                   size="icon"

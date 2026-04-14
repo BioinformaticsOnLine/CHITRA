@@ -281,8 +281,8 @@ export function FloatingHUDBar({
                   ? "h-8 w-8 p-0"
                   : "h-8 px-2 text-xs font-medium",
                 referenceGenomeData
-                  ? "bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30 [&_svg]:stroke-red-500"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800 [&_svg]:stroke-gray-500"
+                  ? "text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )}
             >
               {referenceGenomeData ? (
@@ -303,7 +303,7 @@ export function FloatingHUDBar({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/30 transition-colors group [&_svg]:stroke-blue-500",
+                  "transition-colors group text-muted-foreground hover:text-foreground hover:bg-accent/50",
                   isVertical
                     ? "h-8 w-8 p-0"
                     : "h-8 px-2 text-xs font-medium"
@@ -320,7 +320,7 @@ export function FloatingHUDBar({
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/30 transition-colors group [&_svg]:stroke-yellow-500",
+                  "transition-colors group text-muted-foreground hover:text-foreground hover:bg-accent/50",
                   isVertical
                     ? "h-8 w-8 p-0"
                     : "h-8 px-2 text-xs"
@@ -347,8 +347,7 @@ export function FloatingHUDBar({
                           });
                         }}
                         className={cn(
-                          "relative transition-colors group",
-                          "bg-gray-400/20 text-gray-600 dark:text-gray-400 hover:bg-gray-400/30 [&_svg]:stroke-gray-500 dark:[&_svg]:stroke-gray-400",
+                          "relative transition-colors group text-muted-foreground hover:text-foreground hover:bg-accent/50",
                           isVertical
                             ? "h-8 w-8 p-0"
                             : "h-8 px-2 text-xs font-medium"
@@ -358,7 +357,7 @@ export function FloatingHUDBar({
                         {!isVertical && <span className="max-sm:hidden ml-1.5">Filter</span>}
 
                         {/* Notification indicator when no data loaded */}
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full animate-pulse border border-white dark:border-gray-800 z-20" />
+                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border border-background z-20" />
                       </Button>
                     ) : (
                       <FilterDrawer
@@ -376,7 +375,7 @@ export function FloatingHUDBar({
                           variant="ghost"
                           size="sm"
                           className={cn(
-                            "bg-purple-500/20 text-purple-600 dark:text-purple-400 hover:bg-purple-500/30 transition-colors group [&_svg]:stroke-purple-500",
+                            "transition-colors group bg-primary/10 text-primary hover:bg-primary/20",
                             isVertical
                               ? "h-8 w-8 p-0"
                               : "h-8 px-2 text-xs font-medium"
@@ -416,8 +415,8 @@ export function FloatingHUDBar({
                   ? "h-8 w-8 p-0"
                   : "h-8 px-2 text-xs font-medium",
                 showTooltips
-                  ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/30 [&_svg]:stroke-emerald-500"
-                  : "bg-gray-500/20 text-gray-600 dark:text-gray-400 hover:bg-gray-500/30 [&_svg]:stroke-gray-500"
+                  ? "bg-primary/10 text-primary hover:bg-primary/20"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )}
             >
               {showTooltips ? (
@@ -450,9 +449,7 @@ export function FloatingHUDBar({
                         className={cn(
                           "transition-colors duration-200 group border bg-background/50 backdrop-blur-sm",
                           "border-border/50",
-                          "text-muted-foreground hover:text-foreground",
-                          "hover:bg-accent/50",
-                          "[&_svg]:stroke-muted-foreground group-hover:[&_svg]:stroke-foreground",
+                          "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                           "rounded-xl",
                           isVertical
                             ? "h-10 w-10 p-0"
@@ -463,7 +460,7 @@ export function FloatingHUDBar({
                         {!isVertical && <span className="max-sm:hidden ml-2 font-medium">View Data</span>}
 
                         {/* Notification indicator when no data loaded */}
-                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse border border-background z-20" />
+                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full animate-pulse border-2 border-background z-20" />
                       </Button>
                     ) : (
                       <DataViewerDrawer
@@ -471,16 +468,15 @@ export function FloatingHUDBar({
                         speciesData={speciesData}
                         referenceData={referenceGenomeData}
                         isVertical={isVertical}
+                        onSyntenyRowClick={onToggleSelection}
+                        selectedSynteny={selectedSynteny}
                       >
                         <Button
                           variant="ghost"
                           size="sm"
                           className={cn(
                             "transition-colors duration-200 group border bg-background/50 backdrop-blur-sm",
-                            "border-amber-200 dark:border-amber-800",
-                            "text-amber-700 dark:text-amber-300",
-                            "hover:bg-amber-100/50 dark:hover:bg-amber-900/30",
-                            "[&_svg]:stroke-amber-600 dark:[&_svg]:stroke-amber-400",
+                            "border-primary/50 text-primary hover:bg-primary/10",
                             "rounded-xl",
                             isVertical
                               ? "h-10 w-10 p-0"
@@ -528,20 +524,11 @@ export function FloatingHUDBar({
                         ? "h-10 w-10 p-0"
                         : "h-9 px-3 text-xs font-semibold",
                       isDetailViewOpen && selectedSynteny.length > 0 ? [
-                        "border-green-200 dark:border-green-800",
-                        "text-green-700 dark:text-green-300",
-                        "hover:bg-green-100/50 dark:hover:bg-green-900/30",
-                        "[&_svg]:stroke-green-600 dark:[&_svg]:stroke-green-400"
+                        "border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 hover:bg-green-100/50 dark:hover:bg-green-900/30 [&_svg]:stroke-green-600 dark:[&_svg]:stroke-green-400"
                       ] : selectedSynteny.length > 0 ? [
-                        "border-orange-200 dark:border-orange-800",
-                        "text-orange-700 dark:text-orange-300",
-                        "hover:bg-orange-100/50 dark:hover:bg-orange-900/30",
-                        "[&_svg]:stroke-orange-600 dark:[&_svg]:stroke-orange-400"
+                        "border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 hover:bg-orange-100/50 dark:hover:bg-orange-900/30 [&_svg]:stroke-orange-600 dark:[&_svg]:stroke-orange-400"
                       ] : [
-                        "border-border/50",
-                        "text-muted-foreground hover:text-foreground",
-                        "hover:bg-accent/50",
-                        "[&_svg]:stroke-muted-foreground group-hover:[&_svg]:stroke-foreground"
+                        "border-border/50 text-muted-foreground hover:text-foreground hover:bg-accent/50 [&_svg]:stroke-muted-foreground group-hover:[&_svg]:stroke-foreground"
                       ],
                       "rounded-xl"
                     )}
@@ -563,7 +550,7 @@ export function FloatingHUDBar({
 
                     {/* Notification indicator when no blocks selected */}
                     {selectedSynteny.length === 0 && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse border border-white dark:border-gray-800 z-20" />
+                      <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse border-2 border-background z-20" />
                     )}
                   </Button>
                 </TooltipTrigger>
@@ -593,15 +580,9 @@ export function FloatingHUDBar({
                         ? "h-10 w-10 p-0"
                         : "h-9 px-3 text-xs font-semibold",
                       selectedSynteny.length > 0 ? [
-                        "border-blue-200 dark:border-blue-800",
-                        "text-blue-700 dark:text-blue-300",
-                        "hover:bg-blue-100/50 dark:hover:bg-blue-900/30",
-                        "[&_svg]:stroke-blue-600 dark:[&_svg]:stroke-blue-400"
+                        "border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 [&_svg]:stroke-blue-600 dark:[&_svg]:stroke-blue-400",
                       ] : [
-                        "border-border/50",
-                        "text-muted-foreground hover:text-foreground",
-                        "hover:bg-accent/50",
-                        "[&_svg]:stroke-muted-foreground group-hover:[&_svg]:stroke-foreground"
+                        "border-border/50 text-muted-foreground hover:text-foreground hover:bg-accent/50 [&_svg]:stroke-muted-foreground group-hover:[&_svg]:stroke-foreground"
                       ],
                       "rounded-xl"
                     )}
@@ -817,9 +798,7 @@ export function FloatingHUDBar({
               onClick={onToggleFullScreen}
               className={cn(
                 "transition-colors font-medium",
-                "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
-                "hover:bg-indigo-500/25 dark:hover:bg-indigo-500/20",
-                "border border-indigo-300/50 dark:border-indigo-600/30",
+                isFullScreen ? "bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-accent/50 border border-transparent",
                 isVertical ? "h-8 w-8 p-0" : "h-8 px-3 text-xs"
               )}
             >

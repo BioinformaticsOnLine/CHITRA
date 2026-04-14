@@ -9,6 +9,7 @@ import { notFound } from 'next/navigation';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { ExampleDrawerTrigger } from '@/components/doc-components/example-drawer-trigger';
+import { CsvPreviewDrawer } from '@/components/doc-components/csv-preview-drawer';
 //import { metadataImage } from '@/lib/metadata';
 
 export default async function Page(props: {
@@ -45,7 +46,8 @@ export default async function Page(props: {
         <MDX components={{
           ...defaultMdxComponents,
           img: (props: any) => <ImageZoom {...props} />,
-          ExampleDrawerTrigger
+          ExampleDrawerTrigger,
+          CsvPreviewDrawer
         }} />
       </DocsBody>
     </DocsPage>

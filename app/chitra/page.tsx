@@ -58,6 +58,7 @@ import { Switch } from "@/components/ui/switch";
 import { ChordView } from "./chord-view";
 import { Label } from "@/components/ui/label"
 import { InlineSyntenyDisplay } from "@/components/chromoviz/inline-synteny-display";
+import { ChromosomeReorderPanel } from "@/components/chromoviz/chromosome-reorder-panel";
 import { RawDataTablesDisplay } from "@/components/chromoviz/data-viewer-drawer"; // Changed import
 import PageWrapper from '@/components/wrapper/page-wrapper';
 import { FloatingHUDBar } from "@/components/chromoviz/floating-hud-bar";
@@ -420,7 +421,7 @@ function ChromoVizContent() {
     const [containerHeight, setContainerHeight] = useState<number>(800);
     const mainCardRef = useRef<HTMLDivElement>(null);
     const [showTooltips, setShowTooltips] = useState(true);
-    const [showConnectedOnly, setShowConnectedOnly] = useState(true);
+    const [showConnectedOnly, setShowConnectedOnly] = useState(false);
     const [currentBlockIndex, setCurrentBlockIndex] = useState<number>(0);
     const router = useRouter();
     const [isAtRoot, setIsAtRoot] = useState(true);
@@ -441,7 +442,7 @@ function ChromoVizContent() {
         annotationHeight: GENE_ANNOTATION_CONFIG.HEIGHT,
         maxVisibleGenes: OPTIMIZATION_CONFIG.MAX_VISIBLE_GENES,
         customSpeciesColors: new Map(),
-        widthScale: 100,
+        widthScale: 50,
     });
 
     const handleConfigChange = useCallback((newConfig: Partial<ConfigProps>) => {
@@ -454,7 +455,7 @@ function ChromoVizContent() {
             chromosomeHeight: CHROMOSOME_CONFIG.HEIGHT,
             chromosomeSpacing: CHROMOSOME_CONFIG.SPACING,
             annotationHeight: GENE_ANNOTATION_CONFIG.HEIGHT,
-            widthScale: 100,
+            widthScale: 50,
         }));
         toast.success("Layout settings have been reset to default.");
     }, []);
@@ -585,6 +586,7 @@ function ChromoVizContent() {
     const [alignmentFilter, setAlignmentFilter] = useState<'all' | 'forward' | 'reverse'>('all');
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isDetailedViewFullscreen, setIsDetailedViewFullscreen] = useState(false);
+    const [chromosomeOrder, setChromosomeOrder] = useState<Map<string, string[]>>(new Map());
     const svgRef = useRef<SVGSVGElement>(null) as React.RefObject<SVGSVGElement>;
     const containerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
     const zoomBehaviorRef = useRef<any>(null);
@@ -837,11 +839,15 @@ function ChromoVizContent() {
             finalReferenceData = [...filteredSpeciesData, ...referenceChromosomes];
         }
 
-        // Always put reference genome at bottom
+        // Always put reference genome at bottom, and naturally sort chromosomes within species
         finalReferenceData.sort((a, b) => {
-            if (a.species_name === referenceSpecies) return 1;
-            if (b.species_name === referenceSpecies) return -1;
-            return a.species_name.localeCompare(b.species_name);
+            if (a.species_name !== b.species_name) {
+                if (a.species_name === referenceSpecies) return 1;
+                if (b.species_name === referenceSpecies) return -1;
+                return a.species_name.localeCompare(b.species_name);
+            }
+            // Same species, naturally sort by chromosome ID (e.g., chr1, chr2, chr10)
+            return a.chr_id.localeCompare(b.chr_id, undefined, { numeric: true, sensitivity: 'base' });
         });
 
         return {
@@ -1399,6 +1405,8 @@ function ChromoVizContent() {
                                                             config={config}
                                                             onConfigChange={handleConfigChange}
                                                             onResetLayout={handleResetLayout}
+                                                            chromosomeOrder={chromosomeOrder}
+                                                            onChromosomeOrderChange={setChromosomeOrder}
                                                         />
                                                     </div>
                                                 ) : (
@@ -1618,6 +1626,8 @@ function ChromoVizContent() {
                                                             syntenyData={syntenyData}
                                                             speciesData={speciesData}
                                                             referenceData={referenceData}
+                                                            onSyntenyRowClick={handleSyntenyToggle}
+                                                            selectedSynteny={selectedSynteny}
                                                         />
                                                     </CardContent>
                                                 </Card>
@@ -1665,6 +1675,13 @@ function ChromoVizContent() {
                         </motion.div>
                     </div>
                 </div>
+                {filteredData.referenceData.length > 0 && (
+                    <ChromosomeReorderPanel
+                        referenceData={filteredData.referenceData}
+                        chromosomeOrder={chromosomeOrder}
+                        onChromosomeOrderChange={setChromosomeOrder}
+                    />
+                )}
             </PageWrapper>
         </>
     );

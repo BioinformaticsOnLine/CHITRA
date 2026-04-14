@@ -25,12 +25,12 @@ export default function Footer() {
     };
 
     return (
-        <footer className="relative mt-auto border-t bg-black/95 backdrop-blur-xl">
+        <footer className="relative mt-auto border-t bg-white/95 dark:bg-black/95 backdrop-blur-xl">
             <div className="mx-auto max-w-screen-xl px-3 py-4 sm:px-4 sm:py-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     {/* Logo and Brand Section */}
                     <div className="flex items-center gap-4">
-                        <span className="text-xs text-white/60 hidden sm:inline">Supported by</span>
+                        <span className="text-xs text-black/60 dark:text-white/60 hidden sm:inline">Supported by</span>
                         <div className="flex flex-wrap gap-4 items-center">
                             <Image
                                 src="/assets/logos/igib.png"
@@ -73,12 +73,12 @@ export default function Footer() {
                     {/* Status, Citation & Resources - Inline */}
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Status Badge */}
-                        <div className="flex items-center gap-2 bg-zinc-900/50 rounded-full px-2 py-1 border border-white/8">
+                        <div className="flex items-center gap-2 bg-zinc-100/80 dark:bg-zinc-900/50 rounded-full px-2 py-1 border border-black/10 dark:border-white/10">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                             </span>
-                            <span className="text-xs text-white/60">All systems operational</span>
+                            <span className="text-xs text-black/60 dark:text-white/60">All systems operational</span>
                         </div>
 
                         {/* Citation Button */}
@@ -86,9 +86,9 @@ export default function Footer() {
                             variant="outline"
                             className={cn(
                                 "h-7 px-2 text-xs",
-                                "bg-zinc-900/50 hover:bg-zinc-800/50",
-                                "text-white/80 hover:text-white/90",
-                                "border-white/8 hover:border-white/12",
+                                "bg-zinc-100/80 dark:bg-zinc-900/50 hover:bg-zinc-200/80 dark:hover:bg-zinc-800/50",
+                                "text-black/80 dark:text-white/80 hover:text-black/90 dark:hover:text-white/90",
+                                "border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20",
                                 "backdrop-blur-md backdrop-saturate-150",
                                 "transition-all duration-300"
                             )}
@@ -117,7 +117,7 @@ export default function Footer() {
                                 <Link
                                     key={item.name}
                                     href={item.url}
-                                    className="text-white/60 hover:text-white/90 transition-colors text-xs"
+                                    className="text-black/60 dark:text-white/60 hover:text-black/90 dark:hover:text-white/90 transition-colors text-xs"
                                     target={item.url.startsWith('http') ? '_blank' : '_self'}
                                     rel={item.url.startsWith('http') ? 'noopener noreferrer' : ''}
                                 >
@@ -134,21 +134,21 @@ export default function Footer() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                     transition={{ duration: 0.5 }}
-                    className="mt-4 pt-3 border-t border-white/8"
+                    className="mt-4 pt-3 border-t border-black/10 dark:border-white/10"
                 >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="flex items-center gap-2">
-                            <Building className="h-6 w-6 text-white/60" />
+                            <Building className="h-6 w-6 text-black/60 dark:text-white/60" />
                             <div>
-                                <p className="text-xs font-medium text-white/90">CSIR-IGIB</p>
-                                <p className="text-[10px] text-white/60">Lab of Bioinformatics and Big Data</p>
+                                <p className="text-xs font-medium text-black/90 dark:text-white/90">CSIR-IGIB</p>
+                                <p className="text-[10px] text-black/60 dark:text-white/60">Lab of Bioinformatics and Big Data</p>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-2 text-[10px] text-white/60 sm:justify-end">
-                            <Link href="/privacy" className="hover:text-white/90 transition-colors">
+                        <div className="flex flex-wrap gap-2 text-[10px] text-black/60 dark:text-white/60 sm:justify-end">
+                            <Link href="/privacy" className="hover:text-black/90 dark:hover:text-white/90 transition-colors">
                                 Privacy Policy
                             </Link>
-                            <Link href="/terms" className="hover:text-white/90 transition-colors">
+                            <Link href="/terms" className="hover:text-black/90 dark:hover:text-white/90 transition-colors">
                                 Terms of Service
                             </Link>
                             <span>&copy; {new Date().getFullYear()} CHITRA</span>
@@ -158,10 +158,10 @@ export default function Footer() {
             </div>
 
             {/* Animated text - made more subtle */}
-            <div className="relative h-16 w-full overflow-hidden opacity-20 select-none pointer-events-none">
+            <div className="relative h-16 w-full overflow-hidden opacity-10 dark:opacity-20 select-none pointer-events-none">
                 <AnimatedText
                     text="CHITRA"
-                    className="!text-[8vw] font-black tracking-tighter text-white/80"
+                    className="!text-[8vw] font-black tracking-tighter text-black/80 dark:text-white/80"
                 />
             </div>
         </footer>

@@ -54,21 +54,21 @@ _Visualize synteny blocks among_ **three genomes**.
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
     <span className="text-sm font-medium">synteny_data.csv</span>
     <div className="flex gap-2">
-      <a href="/example/set1/synteny_data.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <CsvPreviewDrawer url="/example/set1/synteny_data.csv" filename="synteny_data.csv" />
       <a href="/example/set1/synteny_data.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
     </div>
   </div>
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
     <span className="text-sm font-medium">species_data.csv</span>
     <div className="flex gap-2">
-      <a href="/example/set1/species_data.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <CsvPreviewDrawer url="/example/set1/species_data.csv" filename="species_data.csv" />
       <a href="/example/set1/species_data.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
     </div>
   </div>
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
     <span className="text-sm font-medium">ref_chromosome_sizes.csv</span>
     <div className="flex gap-2">
-      <a href="/example/set1/ref_chromosome_sizes.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <CsvPreviewDrawer url="/example/set1/ref_chromosome_sizes.csv" filename="ref_chromosome_sizes.csv" />
       <a href="/example/set1/ref_chromosome_sizes.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
     </div>
   </div>
@@ -86,14 +86,14 @@ _Analyze annotated genomes_ using real datasets. Uses the same files as Basic Sy
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
     <span className="text-sm font-medium">ref_gene_annotations.csv</span>
     <div className="flex gap-2">
-      <a href="/example/set3/ref_gene_annotations.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <CsvPreviewDrawer url="/example/set3/ref_gene_annotations.csv" filename="ref_gene_annotations.csv" />
       <a href="/example/set3/ref_gene_annotations.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
     </div>
   </div>
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
     <span className="text-sm font-medium">breakpoints.csv</span>
     <div className="flex gap-2">
-      <a href="/example/set3/bp.csv" target="_blank" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 transition-colors">Preview</a>
+      <CsvPreviewDrawer url="/example/set3/bp.csv" filename="breakpoints.csv" />
       <a href="/example/set3/bp.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
     </div>
   </div>
@@ -158,3 +158,42 @@ This tool converts NCBI Feature Tables into annotation files compatible with CHI
         - `ref_gene_annotations.csv`: Contains detailed gene annotation data.
 
 > **Note:** Feature Tables contain comprehensive genomic data, including gene locations and other features, which this converter processes for visualization.
+
+---
+
+## **Data Preparation & External Tool Integration**
+
+To assist users in transitioning from standard bioinformatics tool outputs to CHITRA, we provide the following mapping guidance. 
+
+### **Mandatory CSV Schema Definitions**
+
+Before preparing your data, ensure your CSV files follow these column naming conventions:
+
+| File | Required Columns | Description |
+| :--- | :--- | :--- |
+| **Synteny Data** | `ref_chr`, `ref_start`, `ref_end`, `query_chr`, `query_start`, `query_end`, `query_strand`, `ref_name`, `query_name` | Coordinates and orientation (`+`/`-`) of syntenic blocks between the reference and query. |
+| **Species Data** | `species_name`, `chr_id`, `chr_size_bp` | Full list of chromosomes and their sizes for all species involved. |
+| **Reference Sizes** | `chromosome`, `size` | Specific sizes for the primary reference genome used for coordinates. |
+
+### **Mapping from Popular Synteny Callers**
+
+If you are using external tools, map their outputs to CHITRA's schema as follows:
+
+| Tool | Primary Output File | Mapping to CHITRA Fields |
+| :--- | :--- | :--- |
+| **SyntenyTracker2** | Natively Compatible | **Recommended**: Automatically generates CHITRA-ready CSV files. |
+| **Satsuma2** | `satsuma_summary.chained.out` | Ref: Col 1-3 → `ref_chr`, `ref_start`, `ref_end`<br/>Query: Col 4-6 → `query_chr`, `query_start`, `query_end` |
+| **SyRI** | `syri.out` | Ref: Col 1-3 → `ref_chr`, `ref_start`, `ref_end`<br/>Query: Col 6-8 → `query_chr`, `query_start`, `query_end` |
+| **Minimap2** | `.paf` | Ref: Col 6, 8, 9 → `ref_chr`, `ref_start`, `ref_end`<br/>Query: Col 1, 3, 4 → `query_chr`, `query_start`, `query_end` |
+| **MCScanX** | `.collinearity` | Manual or script extraction of block boundaries required. |
+
+### **SyntenyTracker2: The Preferred Workflow**
+
+For a seamless experience, we recommend **SyntenyTracker2** as the companion tool for data preparation. It is designed to modernize modular synteny pipelines and simplify the path to visualization.
+
+**Installation via Conda:**
+```bash
+conda install jitendralab::syntenytracker2
+```
+
+By using SyntenyTracker2, you can generate all mandatory input files for CHITRA in one step, ensuring high reproducibility and significantly reducing the data preparation burden.

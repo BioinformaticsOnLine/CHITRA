@@ -36,6 +36,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useAccessibility } from "@/components/chromoviz/accessibility-context";
 import {
   Popover,
   PopoverContent,
@@ -180,8 +181,39 @@ export function ChordView({
   const [showInfo, setShowInfo] = useState(true);
   const [showConfig, setShowConfig] = useState(false);
   const [config, setConfig] = useState<SyntenyViewConfig>({ ...defaultConfig, ...userConfig });
+  const { colorBlindMode, getSyntenyColors } = useAccessibility();
   const [isGraphFixed, setIsGraphFixed] = useState(true);
   const [viewBoxDimensions, setViewBoxDimensions] = useState({ width: 1400, height: 1400 });
+
+  // Apply accessibility colors to chord config when colorblind mode changes
+  useEffect(() => {
+    if (colorBlindMode !== 'none') {
+      const accColors = getSyntenyColors();
+      setConfig(prev => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          colors: {
+            ...prev.visual.colors,
+            forwardStrand: accColors.FORWARD,
+            reverseStrand: accColors.REVERSE,
+          }
+        }
+      }));
+    } else {
+      setConfig(prev => ({
+        ...prev,
+        visual: {
+          ...prev.visual,
+          colors: {
+            ...prev.visual.colors,
+            forwardStrand: defaultConfig.visual.colors.forwardStrand,
+            reverseStrand: defaultConfig.visual.colors.reverseStrand,
+          }
+        }
+      }));
+    }
+  }, [colorBlindMode, getSyntenyColors]);
 
   // Add fullscreen handling
   const handleFullscreen = async () => {
@@ -211,6 +243,23 @@ export function ChordView({
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, [onFullscreen]);
+
+  // Fallback for Safari which often ignores overscroll-behavior-x
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // If primarily horizontal scrolling, prevent default swipe-to-navigate
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+      }
+    };
+
+    // Needs to be passive: false to allow preventDefault
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [containerRef]);
 
   const handleZoomIn = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
@@ -1109,7 +1158,7 @@ export function ChordView({
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full h-full flex flex-col",
+        "relative w-full h-full flex flex-col overscroll-none",
         isFullscreen && "fixed inset-0 bg-background/95 backdrop-blur-xs z-50"
       )}
     >

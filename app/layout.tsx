@@ -3,6 +3,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 // import AuthWrapper from '@/components/wrapper/auth-wrapper'
 import ConvexClientProvider from '@/components/ConvexClientProvider'
+import { AccessibilityProvider } from "@/components/chromoviz/accessibility-context"
+import { AccessibilityButton } from "@/components/chromoviz/accessibility-button"
 import { Analytics } from "@vercel/analytics/react"
 import { GeistSans } from 'geist/font/sans'
 import type { Metadata, Viewport } from 'next'
@@ -66,10 +68,13 @@ export default function RootLayout({
           themes={['light', 'dark', 'system']}
         >
           <RootProvider>
-            <ConvexClientProvider>
-              {children}
-              <Toaster />
-            </ConvexClientProvider>
+            <AccessibilityProvider>
+              <ConvexClientProvider>
+                {children}
+                <Toaster />
+              </ConvexClientProvider>
+              <AccessibilityButton />
+            </AccessibilityProvider>
           </RootProvider>
         </ThemeProvider>
         <Analytics />
