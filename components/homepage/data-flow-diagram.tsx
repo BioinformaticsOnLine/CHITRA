@@ -44,7 +44,7 @@ export function DataFlowDiagram() {
   
   // Required Input refs
   const syntenyRef = useRef<HTMLDivElement>(null);
-  const speciesRef = useRef<HTMLDivElement>(null);
+  const genomeRef = useRef<HTMLDivElement>(null);
   const chromosomeRef = useRef<HTMLDivElement>(null);
   
   // Optional Input refs
@@ -71,7 +71,7 @@ export function DataFlowDiagram() {
               <Circle ref={syntenyRef} label="Synteny Data">
                 <TableProperties className="h-6 w-6" />
               </Circle>
-              <Circle ref={speciesRef} label="Species Data">
+              <Circle ref={genomeRef} label="Genome Data">
                 <Database className="h-6 w-6" />
               </Circle>
               <Circle ref={chromosomeRef} label="Chromosome Size">
@@ -117,7 +117,7 @@ export function DataFlowDiagram() {
 
       {/* Connect Required Inputs to Processing */}
       <AnimatedBeam containerRef={containerRef} fromRef={syntenyRef} toRef={processingRef} />
-      <AnimatedBeam containerRef={containerRef} fromRef={speciesRef} toRef={processingRef} />
+      <AnimatedBeam containerRef={containerRef} fromRef={genomeRef} toRef={processingRef} />
       <AnimatedBeam containerRef={containerRef} fromRef={chromosomeRef} toRef={processingRef} />
 
       {/* Connect Optional Inputs */}

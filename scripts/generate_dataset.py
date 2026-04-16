@@ -5,8 +5,8 @@ Chitra Dataset Generator
 
 This script generates the three CSV files required for Chitra chromosome visualization:
 1. ref_chromosome_sizes.csv - Reference genome chromosome data
-2. species_data.csv - Species-specific chromosome information
-3. synteny_data.csv - Synteny/alignment data between species
+2. genome_data.csv - Genome-specific chromosome information
+3. synteny_data.csv - Synteny/alignment data between genome
 
 Usage:
     python generate_dataset.py
@@ -91,21 +91,21 @@ class ChitraDatasetGenerator:
         print(f"✓ Saved reference chromosomes to {ref_file}")
         return ref_df
     
-    def generate_species_data(self, num_species=3):
-        """Generate species chromosome data CSV"""
-        print(f"Generating species data for {num_species} species...")
+    def generate_genome_data(self, num_genomes=3):
+        """Generate genome chromosome data CSV"""
+        print(f"Generating genome data for {num_genomes} genome...")
         
-        species_names = [f'Species_{i+1}' for i in range(num_species)]
-        species_data = []
+        genome_names = [f'Genome_{i+1}' for i in range(num_genomes)]
+        genome_data = []
         
-        for species in species_names:
-            # Each species has a subset of chromosomes with some size variation
+        for genome in genome_names:
+            # Each genome has a subset of chromosomes with some size variation
             selected_chrs = random.sample(list(self.human_chromosomes.keys()), 
                                         k=random.randint(8, 15))
             
             for chr_name in selected_chrs:
                 base_size = self.human_chromosomes[chr_name]
-                # Add 10-30% size variation between species
+                # Add 10-30% size variation between genome
                 size_variation = np.random.uniform(0.7, 1.3)
                 chr_size = int(base_size * size_variation)
                 
@@ -117,8 +117,8 @@ class ChitraDatasetGenerator:
                 centromere_start = max(500000, min(centromere_start, chr_size - 5000000))
                 centromere_end = max(centromere_start + 500000, min(centromere_end, chr_size - 500000))
                 
-                species_data.append({
-                    'species_name': species,
+                genome_data.append({
+                    'genome_name': genome,
                     'chr_id': chr_name,
                     'chr_type': 'chromosome',
                     'chr_size_bp': chr_size,
@@ -126,28 +126,28 @@ class ChitraDatasetGenerator:
                     'centromere_end': centromere_end
                 })
         
-        species_df = pd.DataFrame(species_data)
-        species_file = self.output_dir / 'species_data.csv'
-        species_df.to_csv(species_file, index=False)
-        print(f"✓ Saved species data to {species_file}")
-        return species_df
+        genome_df = pd.DataFrame(genome_data)
+        genome_file = self.output_dir / 'genome_data.csv'
+        genome_df.to_csv(genome_file, index=False)
+        print(f"✓ Saved genome data to {genome_file}")
+        return genome_df
     
-    def generate_synteny_data(self, ref_df, species_df, blocks_per_chr=5):
+    def generate_synteny_data(self, ref_df, genome_df, blocks_per_chr=5):
         """Generate synteny alignment data CSV"""
         print("Generating synteny data...")
         
         synteny_data = []
         ref_name = "Reference"
         
-        # Group species data by species
-        species_groups = species_df.groupby('species_name')
+        # Group genome data by genome
+        genome_groups = genome_df.groupby('genome_name')
         
-        for species_name, species_chrs in species_groups:
-            print(f"  Processing {species_name}...")
+        for genome_name, genome_chrs in genome_groups:
+            print(f"  Processing {genome_name}...")
             
-            for _, species_chr in species_chrs.iterrows():
-                query_chr = species_chr['chr_id']
-                query_size = species_chr['chr_size_bp']
+            for _, genome_chr in genome_chrs.iterrows():
+                query_chr = genome_chr['chr_id']
+                query_size = genome_chr['chr_size_bp']
                 
                 # Find corresponding reference chromosome
                 ref_chr_data = ref_df[ref_df['chromosome'] == query_chr]
@@ -218,7 +218,7 @@ class ChitraDatasetGenerator:
                     strand = random.choice(['+', '-'])
                     
                     synteny_data.append({
-                        'query_name': species_name,
+                        'query_name': genome_name,
                         'query_chr': query_chr,
                         'query_start': query_start,
                         'query_end': query_end,
@@ -332,15 +332,15 @@ class ChitraDatasetGenerator:
         
         return gene_df, bp_df
     
-    def generate_complete_dataset(self, num_species=3, include_optional=True):
+    def generate_complete_dataset(self, num_genomes=3, include_optional=True):
         """Generate a complete dataset with all required files"""
         print(f"🧬 Generating Chitra dataset in '{self.output_dir}'")
         print("=" * 50)
         
         # Generate required files
         ref_df = self.generate_reference_chromosomes()
-        species_df = self.generate_species_data(num_species)
-        synteny_df = self.generate_synteny_data(ref_df, species_df)
+        genome_df = self.generate_genome_data(num_genomes)
+        synteny_df = self.generate_synteny_data(ref_df, genome_df)
         
         # Generate optional files
         if include_optional:
@@ -351,7 +351,7 @@ class ChitraDatasetGenerator:
         print(f"📁 Files saved in: {self.output_dir.absolute()}")
         print("\nGenerated files:")
         print("  📊 ref_chromosome_sizes.csv (required)")
-        print("  📊 species_data.csv (required)")
+        print("  📊 genome_data.csv (required)")
         print("  📊 synteny_data.csv (required)")
         
         if include_optional:
@@ -361,8 +361,8 @@ class ChitraDatasetGenerator:
         # Print summary statistics
         print(f"\n📈 Dataset Summary:")
         print(f"  • Reference chromosomes: {len(ref_df)}")
-        print(f"  • Species: {num_species}")
-        print(f"  • Total chromosomes: {len(species_df)}")
+        print(f"  • Genome: {num_genomes}")
+        print(f"  • Total chromosomes: {len(genome_df)}")
         print(f"  • Synteny blocks: {len(synteny_df)}")
         
         if include_optional:
@@ -371,7 +371,7 @@ class ChitraDatasetGenerator:
         
         return {
             'reference': ref_df,
-            'species': species_df,
+            'genome': genome_df,
             'synteny': synteny_df,
             'genes': gene_df if include_optional else None,
             'breakpoints': bp_df if include_optional else None
@@ -415,14 +415,14 @@ def visualize_synteny_variations(synteny_df):
     axes[0, 1].legend()
     axes[0, 1].grid(True, alpha=0.3)
     
-    # 3. Box plot of size ratios by species
-    species_list = synteny_df['query_name'].unique()
-    ratio_data = [synteny_df[synteny_df['query_name'] == species]['size_ratio'].values 
-                  for species in species_list]
-    axes[1, 0].boxplot(ratio_data, labels=species_list)
+    # 3. Box plot of size ratios by genome
+    genome_list = synteny_df['query_name'].unique()
+    ratio_data = [synteny_df[synteny_df['query_name'] == genome]['size_ratio'].values 
+                  for genome in genome_list]
+    axes[1, 0].boxplot(ratio_data, labels=genome_list)
     axes[1, 0].axhline(y=1.0, color='red', linestyle='--', alpha=0.7)
     axes[1, 0].set_ylabel('Query/Reference Size Ratio')
-    axes[1, 0].set_title('Size Ratio Distribution by Species')
+    axes[1, 0].set_title('Size Ratio Distribution by Genome')
     axes[1, 0].grid(True, alpha=0.3)
     plt.setp(axes[1, 0].get_xticklabels(), rotation=45)
     
@@ -470,27 +470,27 @@ def main():
     
     # Generate complete dataset
     dataset = generator.generate_complete_dataset(
-        num_species=3,  # Change this to generate more species
+        num_genomes=3,  # Change this to generate more genome
         include_optional=True  # Set to False to skip optional files
     )
     
     return dataset
 
 # For Jupyter notebook usage
-def generate_chitra_dataset(output_dir="generated_dataset", num_species=3, include_optional=True):
+def generate_chitra_dataset(output_dir="generated_dataset", num_genomes=3, include_optional=True):
     """
     Convenience function for Jupyter notebook usage
     
     Args:
         output_dir (str): Directory to save files
-        num_species (int): Number of species to generate
+        num_genomes (int): Number of genome to generate
         include_optional (bool): Whether to generate optional files
     
     Returns:
         dict: Dictionary containing all generated DataFrames
     """
     generator = ChitraDatasetGenerator(output_dir)
-    return generator.generate_complete_dataset(num_species, include_optional)
+    return generator.generate_complete_dataset(num_genomes, include_optional)
 
 if __name__ == "__main__":
     main()

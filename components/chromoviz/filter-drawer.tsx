@@ -101,16 +101,16 @@ const FilterSection = ({
 interface ChromosomeOption {
   label: string
   value: string
-  species: string
+  genome: string
 }
 
 interface FilterDrawerProps {
-  selectedSpecies: string[]
-  setSelectedSpecies: (species: string[]) => void
+  selectedGenomes: string[]
+  setSelectedGenomes: (genome: string[]) => void
   selectedChromosomes: string[]
   setSelectedChromosomes: (chromosomes: string[]) => void
-  speciesOptions: { label: string; value: string }[]
-  chromosomeOptions: { [species: string]: ChromosomeOption[] }
+  genomeOptions: { label: string; value: string }[]
+  chromosomeOptions: { [genome: string]: ChromosomeOption[] }
   referenceGenomeData?: {
     chromosomeSizes: { chromosome: string }[]
   }
@@ -127,11 +127,11 @@ interface FilterDrawerProps {
 export const FilterDrawer = ({
   children,
   showConnectedOnly,
-  selectedSpecies,
-  setSelectedSpecies,
+  selectedGenomes,
+  setSelectedGenomes,
   selectedChromosomes,
   setSelectedChromosomes,
-  speciesOptions,
+  genomeOptions,
   chromosomeOptions,
   referenceGenomeData,
   syntenyData,
@@ -154,7 +154,7 @@ export const FilterDrawer = ({
           uniqueChromosomes.set(value, {
             label: `${syn.query_name} ${syn.query_chr}`,
             value: value,
-            species: syn.query_name
+            genome: syn.query_name
           });
         }
       });
@@ -206,7 +206,7 @@ export const FilterDrawer = ({
     });
   };
 
-  const totalSelectedFilters = selectedSpecies.length + selectedChromosomes.length;
+  const totalSelectedFilters = selectedGenomes.length + selectedChromosomes.length;
 
   return (
     <Drawer direction="left">
@@ -242,17 +242,17 @@ export const FilterDrawer = ({
             <div className="py-6">
               {/* Main Grid Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Species and Reference Selection */}
+                {/* Left Column - Genome and Reference Selection */}
                 <div className="space-y-6">
-                  {/* Species Filter Section */}
+                  {/* Genome Filter Section */}
                   <FilterSection
-                    title="Species Selection"
-                    description="Choose which species to include in the visualization"
-                    count={selectedSpecies.length}
-                    total={speciesOptions.length}
+                    title="Genome Selection"
+                    description="Choose which genome to include in the visualization"
+                    count={selectedGenomes.length}
+                    total={genomeOptions.length}
                     icon={<Database className="h-4 w-4 text-blue-500" />}
                     onClear={() => {
-                      setSelectedSpecies([]);
+                      setSelectedGenomes([]);
                       const remainingChromosomes = selectedChromosomes.filter(chr =>
                         chr.startsWith('ref:')
                       );
@@ -260,10 +260,10 @@ export const FilterDrawer = ({
                     }}
                   >
                     <MultiSelect
-                      value={selectedSpecies}
-                      options={speciesOptions}
-                      onValueChange={setSelectedSpecies}
-                      placeholder="Filter by species..."
+                      value={selectedGenomes}
+                      options={genomeOptions}
+                      onValueChange={setSelectedGenomes}
+                      placeholder="Filter by genome..."
                       disabled={isLoading}
                       maxCount={2}
                       modalPopover={true}
@@ -329,11 +329,11 @@ export const FilterDrawer = ({
                   )}
                 </div>
 
-                {/* Right Column - Species Chromosomes */}
+                {/* Right Column - Genome Chromosomes */}
                 <div className="space-y-6">
                   <FilterSection
-                    title="Species Chromosomes"
-                    description="Select chromosomes from each species"
+                    title="Genome Chromosomes"
+                    description="Select chromosomes from each genome"
                     count={selectedChromosomes.filter(chr => !chr.startsWith('ref:')).length}
                     total={Object.values(chromosomeOptions).flat().filter(chr => !chr.value.startsWith('ref:')).length}
                     icon={<ChevronRight className="h-4 w-4 text-rose-500" />}
@@ -343,17 +343,17 @@ export const FilterDrawer = ({
                     }}
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
-                      {Object.entries(chromosomeOptions).map(([species, chromosomes]) => {
-                        if (species === 'Reference') return null;
-                        if (selectedSpecies.length > 0 && !selectedSpecies.includes(species)) return null;
+                      {Object.entries(chromosomeOptions).map(([genome, chromosomes]) => {
+                        if (genome === 'Reference') return null;
+                        if (selectedGenomes.length > 0 && !selectedGenomes.includes(genome)) return null;
 
                         const selectedCount = selectedChromosomes.filter(chr =>
-                          chr.startsWith(`${species}:`)
+                          chr.startsWith(`${genome}:`)
                         ).length;
 
                         return (
                           <motion.div
-                            key={species}
+                            key={genome}
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="rounded-md border border-border/50 p-3 space-y-3 bg-muted/30"
@@ -361,7 +361,7 @@ export const FilterDrawer = ({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <Label className="text-sm font-medium">
-                                  {species.replace('_', ' ')}
+                                  {genome.replace('_', ' ')}
                                 </Label>
                                 <FilterBadge count={selectedCount} total={chromosomes.length} />
                               </div>
@@ -371,7 +371,7 @@ export const FilterDrawer = ({
                                   size="sm"
                                   onClick={() => {
                                     const otherChromosomes = selectedChromosomes.filter(chr =>
-                                      !chr.startsWith(`${species}:`)
+                                      !chr.startsWith(`${genome}:`)
                                     );
                                     setSelectedChromosomes(otherChromosomes);
                                   }}
@@ -383,12 +383,12 @@ export const FilterDrawer = ({
                             </div>
                             <MultiSelect
                               value={selectedChromosomes.filter(chr =>
-                                chr.startsWith(`${species}:`)
+                                chr.startsWith(`${genome}:`)
                               )}
                               options={chromosomes}
                               onValueChange={(values) => {
                                 const otherChromosomes = selectedChromosomes.filter(chr =>
-                                  !chr.startsWith(`${species}:`)
+                                  !chr.startsWith(`${genome}:`)
                                 );
                                 setSelectedChromosomes([...otherChromosomes, ...values]);
                               }}
@@ -414,10 +414,10 @@ export const FilterDrawer = ({
               variant="outline"
               className="flex-1 hover:bg-blue-500/10 hover:text-blue-500 border-border/50"
               onClick={() => {
-                setSelectedSpecies([]);
+                setSelectedGenomes([]);
                 setSelectedChromosomes([]);
               }}
-              disabled={isLoading || (selectedSpecies.length === 0 && selectedChromosomes.length === 0)}
+              disabled={isLoading || (selectedGenomes.length === 0 && selectedChromosomes.length === 0)}
             >
               <Database className="h-4 w-4 mr-2" />
               Show all

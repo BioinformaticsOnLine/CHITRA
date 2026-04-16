@@ -23,11 +23,11 @@ interface InlineSyntenyDisplayProps {
 
 function downloadCSV(data: SyntenyData[], filename: string) {
   const headers = [
-    'Reference Species',
+    'Reference Genome',
     'Reference Chromosome',
     'Reference Start (Mb)',
     'Reference End (Mb)',
-    'Query Species',
+    'Query Genome',
     'Query Chromosome',
     'Query Start (Mb)',
     'Query End (Mb)',

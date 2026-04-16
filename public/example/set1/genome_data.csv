@@ -1,0 +1,7 @@
+genome_name,chr_id,chr_type,chr_size_bp,centromere_start,centromere_end
+Genome_1,chr1,chromosome,224244399,93700000,95700000
+Genome_1,chr2,chromosome,182055439,81800000,84800000
+Genome_1,chrX,chromosome,145953222,55100000,59000000
+Genome_2,chr1,chromosome,195471971,87400000,89200000
+Genome_2,chr2,chromosome,182113224,71800000,73800000
+Genome_2,chrX,chromosome,171031299,58100000,61100000

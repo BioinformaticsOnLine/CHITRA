@@ -14,7 +14,7 @@ export interface AccessibilityState {
   setHighContrast: (enabled: boolean) => void
   getMutationColors: () => Record<string, string>
   getSyntenyColors: () => { FORWARD: string; REVERSE: string; BLOCK_FORWARD: string; BLOCK_REVERSE: string }
-  getSpeciesPalette: () => string[]
+  getGenomePalette: () => string[]
 }
 
 // Default (normal vision) palettes - matching existing app colors
@@ -86,23 +86,23 @@ const TRITANOPIA_SYNTENY_COLORS = {
   BLOCK_REVERSE: '#D55E00',
 }
 
-// Species palettes per mode
-const DEFAULT_SPECIES_PALETTE = [
+// Genome palettes per mode
+const DEFAULT_GENOME_PALETTE = [
   '#fbb4ae', '#b3cde3', '#ccebc5', '#decbe4', '#fed9a6',
   '#ffffcc', '#e5d8bd', '#fddaec', '#f2f2f2',
 ]
 
-const DEUTERANOPIA_SPECIES_PALETTE = [
+const DEUTERANOPIA_GENOME_PALETTE = [
   '#0072B2', '#E69F00', '#56B4E9', '#CC79A7', '#009E73',
   '#F0E442', '#D55E00', '#000000', '#BBBBBB',
 ]
 
-const PROTANOPIA_SPECIES_PALETTE = [
+const PROTANOPIA_GENOME_PALETTE = [
   '#0072B2', '#E69F00', '#56B4E9', '#CC79A7', '#009E73',
   '#F0E442', '#D55E00', '#000000', '#BBBBBB',
 ]
 
-const TRITANOPIA_SPECIES_PALETTE = [
+const TRITANOPIA_GENOME_PALETTE = [
   '#009E73', '#D55E00', '#0072B2', '#CC79A7', '#E69F00',
   '#56B4E9', '#F0E442', '#000000', '#BBBBBB',
 ]
@@ -156,12 +156,12 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     }
   }, [colorBlindMode])
 
-  const getSpeciesPalette = useCallback(() => {
+  const getGenomePalette = useCallback(() => {
     switch (colorBlindMode) {
-      case 'deuteranopia': return DEUTERANOPIA_SPECIES_PALETTE
-      case 'protanopia': return PROTANOPIA_SPECIES_PALETTE
-      case 'tritanopia': return TRITANOPIA_SPECIES_PALETTE
-      default: return DEFAULT_SPECIES_PALETTE
+      case 'deuteranopia': return DEUTERANOPIA_GENOME_PALETTE
+      case 'protanopia': return PROTANOPIA_GENOME_PALETTE
+      case 'tritanopia': return TRITANOPIA_GENOME_PALETTE
+      default: return DEFAULT_GENOME_PALETTE
     }
   }, [colorBlindMode])
 
@@ -173,7 +173,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       setHighContrast,
       getMutationColors,
       getSyntenyColors,
-      getSpeciesPalette,
+      getGenomePalette,
     }}>
       {children}
     </AccessibilityContext.Provider>
@@ -191,7 +191,7 @@ export function useAccessibility() {
       setHighContrast: () => {},
       getMutationColors: () => DEFAULT_MUTATION_COLORS,
       getSyntenyColors: () => DEFAULT_SYNTENY_COLORS,
-      getSpeciesPalette: () => DEFAULT_SPECIES_PALETTE,
+      getGenomePalette: () => DEFAULT_GENOME_PALETTE,
     }
   }
   return ctx

@@ -47,16 +47,16 @@ export function getChromosomeTooltip(chr: ChromosomeData, maxChrSizeMb: number):
         </Badge>
       </div>
 
-      {/* Species Info */}
+      {/* Genome Info */}
       <div className="flex items-center gap-2">
         <Badge
           variant="outline"
           className="bg-gray-50 text-gray-800 dark:bg-gray-900/50 dark:text-gray-100 dark:border-gray-700"
         >
-          Species
+          Genome
         </Badge>
         <span className="text-sm text-muted-foreground dark:text-gray-300">
-          {chr.species_name}
+          {chr.genome_name}
         </span>
       </div>
 
@@ -685,7 +685,7 @@ export function HoverTooltip({
                   variant="outline"
                   className="bg-linear-to-r from-indigo-50 to-blue-50 text-gray-800 dark:from-indigo-950/30 dark:to-blue-950/30 dark:text-gray-100 dark:border-blue-800/30 transition-all group-hover:from-indigo-100 group-hover:to-blue-100"
                 >
-                  {hoveredChromosome.isRef ? 'Reference Position' : `Query: ${queryChromosome?.species_name} ${queryChromosome?.chr_id}`}
+                  {hoveredChromosome.isRef ? 'Reference Position' : `Query: ${queryChromosome?.genome_name} ${queryChromosome?.chr_id}`}
                 </Badge>
                 <Badge
                   variant="secondary"

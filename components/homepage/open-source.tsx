@@ -24,7 +24,7 @@ export default function OpenSource() {
             id: "3",
             icon: FileInput,
             question: "What input files are required?",
-            answer: "Mandatory files include Synteny Data, Species Data, and Reference Chromosome Size (all in CSV format). Optional files include Gene Annotations and Breakpoint Data."
+            answer: "Mandatory files include Synteny Data, Genome Data, and Reference Chromosome Size (all in CSV format). Optional files include Gene Annotations and Breakpoint Data."
         },
         {
             id: "4", 

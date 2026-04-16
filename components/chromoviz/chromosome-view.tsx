@@ -16,7 +16,7 @@ interface ChromosomeViewProps {
   xOffset: number;
   y: number;
   xScale: d3.ScaleLinear<number, number>;
-  speciesColor: string;
+  genomeColor: string;
   onHover: (event: any, content: string | { type: string; data: GeneTooltipData | React.ReactElement }) => void;
   onMove: (event: any) => void;
   onLeave: () => void;
@@ -47,7 +47,7 @@ export function renderChromosome({
   xOffset,
   y,
   xScale,
-  speciesColor,
+  genomeColor,
   onHover,
   onMove,
   onLeave,
@@ -70,7 +70,7 @@ export function renderChromosome({
   const chrWidth = xScale(chr.chr_size_bp);
 
   // Determine the effective color for the chromosome
-  let effectiveColor = speciesColor;
+  let effectiveColor = genomeColor;
   if (useStandardPalette) {
     const colorPalette = d3.scaleOrdinal(d3.schemeCategory10);
     effectiveColor = colorPalette(chr.chr_id);
@@ -133,7 +133,7 @@ export function renderChromosome({
     .attr("d", chrPath.toString())
     .attr("class", "chromosome-body")
     .attr("data-chr", chr.chr_id)
-    .attr("data-species", chr.species_name)
+    .attr("data-genome", chr.genome_name)
     .attr("fill", effectiveColor) // Use effectiveColor
     .attr("stroke", d3.color(effectiveColor)?.darker(0.5)?.toString() ?? effectiveColor) // Use effectiveColor
     .attr("stroke-width", 1.5)

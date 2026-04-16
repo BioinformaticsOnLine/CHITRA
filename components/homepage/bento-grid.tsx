@@ -21,7 +21,7 @@ export function BentoGrid() {
       <GradientBentoCard
         icon={<GitBranch className="w-5 h-5 text-rose-500" />}
         title="Syntenic Relationships"
-        description="Explore and visualize syntenic relationships between different species with intuitive, interactive displays."
+        description="Explore and visualize syntenic relationships between different genome with intuitive, interactive displays."
         className={`sm:col-span-1 p-4 sm:p-6 h-full 
           bg-linear-to-br from-rose-500/10 via-pink-500/10 to-red-500/10
           dark:from-rose-400/10 dark:via-pink-400/10 dark:to-red-400/10

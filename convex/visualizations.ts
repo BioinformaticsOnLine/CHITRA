@@ -19,19 +19,21 @@ export const saveVisualization = mutation({
         // File Storage IDs
         files: v.optional(v.object({
             synteny: v.optional(v.string()),
-            species: v.optional(v.string()),
+            genome: v.optional(v.string()),
             reference: v.optional(v.string()),
         })),
 
         // Visualization State
         visualizationState: v.object({
             version: v.string(),
-            selectedSpecies: v.array(v.string()),
+            selectedGenomes: v.optional(v.array(v.string())),
+            selectedSpecies: v.optional(v.array(v.string())),
             selectedChromosomes: v.array(v.string()),
             selectedSyntenyIds: v.optional(v.array(v.string())),
             alignmentFilter: v.union(v.literal('all'), v.literal('forward'), v.literal('reverse')),
             selectedMutationTypes: v.array(v.array(v.any())),
-            customSpeciesColors: v.array(v.array(v.string())),
+            customGenomeColors: v.optional(v.array(v.array(v.string()))),
+            customSpeciesColors: v.optional(v.array(v.array(v.string()))),
             selectedSynteny: v.optional(v.array(v.any())),
 
             mainViewTransform: v.object({ k: v.number(), x: v.number(), y: v.number() }),
@@ -78,22 +80,37 @@ export const getVisualization = query({
         }
 
         // Generate URLs for files if they exist
-        let fileUrls: { synteny?: string | null; species?: string | null; reference?: string | null } = {};
+        let fileUrls: { synteny?: string | null; genome?: string | null; reference?: string | null } = {};
         if (viz.files) {
             // Resolve storage IDs to URLs
             const syntenyUrl = viz.files.synteny ? await ctx.storage.getUrl(viz.files.synteny) : null;
-            const speciesUrl = viz.files.species ? await ctx.storage.getUrl(viz.files.species) : null;
+            const genomeUrl = viz.files.genome ? await ctx.storage.getUrl(viz.files.genome) : null;
             const referenceUrl = viz.files.reference ? await ctx.storage.getUrl(viz.files.reference) : null;
 
             fileUrls = {
                 synteny: syntenyUrl,
-                species: speciesUrl,
+                genome: genomeUrl,
                 reference: referenceUrl
             };
         }
 
+        // Map legacy species fields to genome fields for backward compatibility
+        const state = viz.visualizationState;
+        if (!state.selectedGenomes && state.selectedSpecies) {
+            state.selectedGenomes = state.selectedSpecies;
+        } else if (!state.selectedGenomes) {
+            state.selectedGenomes = [];
+        }
+        
+        if (!state.customGenomeColors && state.customSpeciesColors) {
+            state.customGenomeColors = state.customSpeciesColors;
+        } else if (!state.customGenomeColors) {
+            state.customGenomeColors = [];
+        }
+
         return {
             ...viz,
+            visualizationState: state,
             fileUrls
         };
     },

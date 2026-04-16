@@ -41,7 +41,7 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedSynteny, setSelectedSynteny] = useState<SyntenyData[]>([]);
   const [selectedMutationTypes, setSelectedMutationTypes] = useState<Map<string, MutationType>>(new Map());
-  const [customSpeciesColors, setCustomSpeciesColors] = useState<Map<string, string>>(new Map());
+  const [customGenomeColors, setCustomGenomeColors] = useState<Map<string, string>>(new Map());
   const [mutationColors, setMutationColors] = useState<Record<string, string>>(MUTATION_COLORS);
   const [mutationFullNames, setMutationFullNames] = useState<Record<string, string>>(initialMutationFullNames);
   const [showConnectedOnly, setShowConnectedOnly] = useState(false);
@@ -54,22 +54,22 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
     chromosomeSpacing: 10,
     annotationHeight: 8,
     maxVisibleGenes: 100,
-    customSpeciesColors: new Map(),
+    customGenomeColors: new Map(),
   });
 
   useEffect(() => {
     const initialPositions: any = {};
     let yOffset = 50;
-    const speciesGroups = d3.group(referenceData, d => d.species_name);
-    const uniqueSpecies = Array.from(speciesGroups.keys());
-    uniqueSpecies.forEach((species, speciesIndex) => {
-      const speciesData = referenceData.filter(d => d.species_name === species);
+    const genomeGroups = d3.group(referenceData, d => d.genome_name);
+    const uniqueGenomes = Array.from(genomeGroups.keys());
+    uniqueGenomes.forEach((genome, genomeIndex) => {
+      const genomeData = referenceData.filter(d => d.genome_name === genome);
       let xOffset = 100;
-      speciesData.forEach(chr => {
-        initialPositions[`${chr.species_name}:${chr.chr_id}`] = { x: xOffset, y: yOffset };
+      genomeData.forEach(chr => {
+        initialPositions[`${chr.genome_name}:${chr.chr_id}`] = { x: xOffset, y: yOffset };
         xOffset += xScale(chr.chr_size_bp) + chromosomeSpacing;
       });
-      yOffset += speciesSpacing;
+      yOffset += genomeSpacing;
     });
     setChromosomePositions(initialPositions);
   }, [referenceData]);
@@ -97,19 +97,19 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
     });
   };
 
-  const speciesGroups = d3.group(referenceData, d => d.species_name);
-  const uniqueSpecies = Array.from(speciesGroups.keys());
-  const speciesColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(uniqueSpecies);
-  const speciesSpacing = 150;
+  const genomeGroups = d3.group(referenceData, d => d.genome_name);
+  const uniqueGenomes = Array.from(genomeGroups.keys());
+  const genomeColorScale = d3.scaleOrdinal(d3.schemeCategory10).domain(uniqueGenomes);
+  const genomeSpacing = 150;
   const chromosomeHeight = 20;
   const chromosomeSpacing = 10;
   const maxChrSize = d3.max(referenceData, d => d.chr_size_bp) || 0;
   const xScale = d3.scaleLinear().domain([0, maxChrSize]).range([0, 800]);
 
-  const getChromosomePosition = (chrId: string, speciesName: string) => {
-    const pos = chromosomePositions[`${speciesName}:${chrId}`];
+  const getChromosomePosition = (chrId: string, genomeName: string) => {
+    const pos = chromosomePositions[`${genomeName}:${chrId}`];
     if (pos) {
-      const chr = referenceData.find(c => c.chr_id === chrId && c.species_name === speciesName);
+      const chr = referenceData.find(c => c.chr_id === chrId && c.genome_name === genomeName);
       if (chr) {
         return { ...pos, width: xScale(chr.chr_size_bp) };
       }
@@ -171,10 +171,10 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
     setSelectedMutationTypes(updatedMutationTypes);
   };
 
-  const handleSpeciesColorChange = (species: string, color: string) => {
-    const updatedColors = new Map(customSpeciesColors);
-    updatedColors.set(species, color);
-    setCustomSpeciesColors(updatedColors);
+  const handleGenomeColorChange = (genome: string, color: string) => {
+    const updatedColors = new Map(customGenomeColors);
+    updatedColors.set(genome, color);
+    setCustomGenomeColors(updatedColors);
   };
 
   const handleAddCustomMutationType = (name: string, color: string) => {
@@ -183,8 +183,8 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
     setMutationFullNames(prev => ({ ...prev, [newKey]: name }));
   };
 
-  const handleResetSpeciesColors = () => {
-    setCustomSpeciesColors(new Map());
+  const handleResetGenomeColors = () => {
+    setCustomGenomeColors(new Map());
   };
 
   const handleConfigChange = (newConfig: Partial<ConfigProps>) => {
@@ -198,7 +198,7 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
       chromosomeSpacing: 10,
       annotationHeight: 8,
       maxVisibleGenes: 100,
-      customSpeciesColors: new Map(),
+      customGenomeColors: new Map(),
     });
   };
 
@@ -227,10 +227,10 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
           selectedSynteny={selectedSynteny}
           selectedMutationTypes={selectedMutationTypes}
           onMutationTypeSelect={handleMutationTypeSelect}
-          customSpeciesColors={customSpeciesColors}
-          onSpeciesColorChange={handleSpeciesColorChange}
-          onResetSpeciesColors={handleResetSpeciesColors}
-          speciesData={referenceData}
+          customGenomeColors={customGenomeColors}
+          onGenomeColorChange={handleGenomeColorChange}
+          onResetGenomeColors={handleResetGenomeColors}
+          genomeData={referenceData}
           showConnectedOnly={showConnectedOnly}
           setShowConnectedOnly={setShowConnectedOnly}
           zoomLevel={stage.scale}
@@ -262,13 +262,13 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
         draggable
       >
         <Layer>
-          {uniqueSpecies.map((species, speciesIndex) => {
-            const speciesData = referenceData.filter(d => d.species_name === species);
+          {uniqueGenomes.map((genome, genomeIndex) => {
+            const genomeData = referenceData.filter(d => d.genome_name === genome);
             return (
-              <React.Fragment key={species}>
-                <Text text={species} x={10} y={speciesIndex * speciesSpacing + 50} fontSize={16} />
-                {speciesData.map((chr) => {
-                  const pos = chromosomePositions[`${chr.species_name}:${chr.chr_id}`];
+              <React.Fragment key={genome}>
+                <Text text={genome} x={10} y={genomeIndex * genomeSpacing + 50} fontSize={16} />
+                {genomeData.map((chr) => {
+                  const pos = chromosomePositions[`${chr.genome_name}:${chr.chr_id}`];
                   if (!pos) {
                     return null;
                   }
@@ -282,7 +282,7 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
                       draggable
                       onDragMove={e => {
                         const newPositions = { ...chromosomePositions };
-                        newPositions[`${chr.species_name}:${chr.chr_id}`] = { x: e.target.x(), y: e.target.y() };
+                        newPositions[`${chr.genome_name}:${chr.chr_id}`] = { x: e.target.x(), y: e.target.y() };
                         setChromosomePositions(newPositions);
                       }}
                     >
@@ -316,7 +316,7 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
                           context.closePath();
                           context.fillStrokeShape(shape);
                         }}
-                        fill={speciesColorScale(species)}
+                        fill={genomeColorScale(genome)}
                         stroke="black"
                         strokeWidth={1}
                         onMouseEnter={e => {
@@ -324,7 +324,7 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
                           setTooltip({
                             x: e.target.x() + e.target.width() / 2,
                             y: e.target.y() - 10,
-                            text: `${chr.species_name}: ${chr.chr_id}`,
+                            text: `${chr.genome_name}: ${chr.chr_id}`,
                             visible: true,
                           });
                         }}
@@ -408,7 +408,7 @@ export const KonvaSynteny: React.FC<KonvaSyntenyProps> = ({ referenceData: initi
                   }}
                   fillLinearGradientStartPoint={{ x: sourceX, y: sourcePos.y }}
                   fillLinearGradientEndPoint={{ x: targetX, y: targetPos.y }}
-                  fillLinearGradientColorStops={[0, speciesColorScale(link.query_name), 1, speciesColorScale(link.ref_name)]}
+                  fillLinearGradientColorStops={[0, genomeColorScale(link.query_name), 1, genomeColorScale(link.ref_name)]}
                   stroke={link.query_strand === '+' ? '#2563eb' : '#dc2626'}
                   strokeWidth={0.5}
                   opacity={0.7}

@@ -40,12 +40,12 @@ const EXAMPLE_SETS: ExampleSet[] = [
   {
     id: 'set1',
     name: 'Basic Synteny',
-    description: 'Simple synteny visualization between species'
+    description: 'Simple synteny visualization between genome'
   },
   {
     id: 'set2',
-    name: 'Multi-Species',
-    description: 'Complex synteny relationships across multiple species'
+    name: 'Multi-Genome',
+    description: 'Complex synteny relationships across multiple genome'
   },
   {
     id: 'set3',
@@ -62,7 +62,7 @@ const getExampleFiles = (setId: string): ExampleFile[] => {
       description: "Contains information about syntenic blocks between genomes",
       downloadUrl: `${basePath}/synteny_data.csv`,
       format: [
-        { field: "query_name", desc: "Name of query species" },
+        { field: "query_name", desc: "Name of query genome" },
         { field: "query_chr", desc: "Query chromosome ID" },
         { field: "query_start", desc: "Start position in query" },
         { field: "query_end", desc: "End position in query" },
@@ -70,18 +70,18 @@ const getExampleFiles = (setId: string): ExampleFile[] => {
         { field: "ref_chr", desc: "Reference chromosome ID" },
         { field: "ref_start", desc: "Start position in reference" },
         { field: "ref_end", desc: "End position in reference" },
-        { field: "ref_name", desc: "Reference species name" },
+        { field: "ref_name", desc: "Reference genome name" },
         { field: "qry_lvl", desc: "Query assembly level" }
       ],
       required: true,
       colorClass: 'from-blue-500/5 to-indigo-500/10'
     },
     {
-      name: "species_data.csv",
-      description: "Contains chromosome information for each species",
-      downloadUrl: `${basePath}/species_data.csv`,
+      name: "genome_data.csv",
+      description: "Contains chromosome information for each genome",
+      downloadUrl: `${basePath}/genome_data.csv`,
       format: [
-        { field: "species_name", desc: "Name of the species" },
+        { field: "genome_name", desc: "Name of the genome" },
         { field: "chr_id", desc: "Chromosome identifier" },
         { field: "chr_type", desc: "Type of chromosome" },
         { field: "chr_size_bp", desc: "Size of the chromosome in bp" },

@@ -25,7 +25,7 @@ export const tourSteps = [{
     {
       icon: "🔍",
       title: "Interactive Controls",
-      content: "Use these controls to filter species, chromosomes, and customize your visualization.",
+      content: "Use these controls to filter genome, chromosomes, and customize your visualization.",
       selector: "[data-tour='controls-section']",
       side: "bottom" as Side,
       showControls: true,

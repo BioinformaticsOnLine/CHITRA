@@ -55,9 +55,9 @@ You can browse all example sets directly on GitHub:
 
 Here are direct links to the curated example sets, as featured in the "Quick Demos" section of the application:
 
-*   **Set 1: Basic Synteny** - Simple synteny visualization between species.
+*   **Set 1: Basic Synteny** - Simple synteny visualization between genome.
     *   [View Set 1 Files on GitHub](https://github.com/BioinformaticsOnLine/CHITRA/tree/main/public/example/set1)
-*   **Set 2: Multi-Species** - Complex synteny relationships across multiple species.
+*   **Set 2: Multi-Genome** - Complex synteny relationships across multiple genome.
     *   [View Set 2 Files on GitHub](https://github.com/BioinformaticsOnLine/CHITRA/tree/main/public/example/set2)
 *   **Set 3: Annotated Genome** - Detailed genome annotations with gene information and breakpoints.
     *   [View Set 3 Files on GitHub](https://github.com/BioinformaticsOnLine/CHITRA/tree/main/public/example/set3)
@@ -68,11 +68,11 @@ Here are direct links to the curated example sets, as featured in the "Quick Dem
 CHITRA requires three CSV files as input:
 
 ### 1. Synteny Data (`synteny_data.csv`)
-This file contains the pairwise synteny blocks between the query and reference species.
+This file contains the pairwise synteny blocks between the query and reference genome.
 
 | Column | Description |
 | --- | --- |
-| `query_name` | Query species name |
+| `query_name` | Query genome name |
 | `query_chr` | Query chromosome ID |
 | `query_start` | Start position in query |
 | `query_end` | End position in query |
@@ -80,15 +80,15 @@ This file contains the pairwise synteny blocks between the query and reference s
 | `ref_chr` | Reference chromosome ID |
 | `ref_start` | Start position in reference |
 | `ref_end` | End position in reference |
-| `ref_name` | Reference species name |
+| `ref_name` | Reference genome name |
 | `qry_lvl` | Query level |
 
-### 2. Species Data (`species_data.csv`)
-This file contains information about the chromosomes of each species.
+### 2. Genome Data (`genome_data.csv`)
+This file contains information about the chromosomes of each genome.
 
 | Column | Description |
 | --- | --- |
-| `species_name` | Name of the species |
+| `genome_name` | Name of the genome |
 | `chr_id` | Chromosome identifier |
 | `chr_type` | Type of chromosome |
 | `chr_size_bp` | Chromosome size in base pairs |

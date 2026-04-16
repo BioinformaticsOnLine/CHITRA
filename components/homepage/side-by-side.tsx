@@ -36,15 +36,15 @@ export default function SideBySide() {
     },
     {
       icon: <GitBranch className="w-6 h-6" />,
-      title: "Multi-Species Comparison",
-      subtitle: "Compare genomic data across species",
+      title: "Multi-Genome Comparison",
+      subtitle: "Compare genomic data across genome",
       value: "comparison",
       content: (
         <BackgroundGradient className="rounded-[22px] p-1 overflow-hidden">
           <div className="w-full overflow-hidden relative h-full rounded-[20px] bg-white/70 dark:bg-black/70 backdrop-blur-xl border border-white/20 dark:border-white/10">
             <Image
               src="/media/i2.webp"
-              alt="Chitra Multi-Species Comparison"
+              alt="Chitra Multi-Genome Comparison"
               width={1200}
               height={800}
               className="object-cover w-full h-full rounded-[18px]"
@@ -103,7 +103,7 @@ export default function SideBySide() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const images = [
     { src: "/media/i1.webp", alt: "Chitra Chromosome Visualization" },
-    { src: "/media/i2.webp", alt: "Chitra Multi-Species Comparison" },
+    { src: "/media/i2.webp", alt: "Chitra Multi-Genome Comparison" },
     { src: "/media/i3.webp", alt: "Chitra Syntenic Relationships" },
     { src: "/media/i4.webp", alt: "Chitra Interactive Analysis" },
   ];

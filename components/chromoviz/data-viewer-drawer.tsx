@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils"
 // Props for the RawDataTablesDisplay component
 interface RawDataTablesDisplayProps {
   syntenyData?: SyntenyData[]
-  speciesData?: ChromosomeData[]
+  genomeData?: ChromosomeData[]
   referenceData?: ReferenceGenomeData | null // Allow null
   className?: string
   onSyntenyRowClick?: (row: SyntenyData) => void
@@ -44,7 +44,7 @@ interface RawDataTablesDisplayProps {
 interface DataViewerDrawerProps {
   children: React.ReactNode
   syntenyData?: SyntenyData[]
-  speciesData?: ChromosomeData[]
+  genomeData?: ChromosomeData[]
   referenceData?: ReferenceGenomeData | null // Allow null
   isVertical?: boolean
   onSyntenyRowClick?: (row: SyntenyData) => void
@@ -327,15 +327,15 @@ const syntenyColumns = [
   columnHelper.accessor('ref_chr', { header: 'Ref Chr', size: 90 }),
   columnHelper.accessor('ref_start', { header: 'Ref Start', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
   columnHelper.accessor('ref_end', { header: 'Ref End', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('ref_name', { header: 'Ref Species', size: 140 }),
+  columnHelper.accessor('ref_name', { header: 'Ref Genome', size: 140 }),
   columnHelper.accessor('symbol', { header: 'Symbol', size: 90 }),
   columnHelper.accessor('class', { header: 'Class', size: 110 }),
   columnHelper.accessor('GeneID', { header: 'Gene ID', size: 110 }),
 ]
 
-const speciesColumns = [
+const genomeColumns = [
   columnHelper.display({ id: 'sno', header: 'S.No', size: 60, cell: (info) => info.row.index + 1 }),
-  columnHelper.accessor('species_name', { header: 'Species Name', size: 150 }),
+  columnHelper.accessor('genome_name', { header: 'Genome Name', size: 150 }),
   columnHelper.accessor('chr_id', { header: 'Chr ID', size: 110 }),
   columnHelper.accessor('chr_type', { header: 'Type', size: 90 }),
   columnHelper.accessor('chr_size_bp', { header: 'Size (bp)', size: 120, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
@@ -551,7 +551,7 @@ function SummaryDashboard({ syntenyData, referenceData }: RawDataTablesDisplayPr
 // New component to display raw data tables directly
 export function RawDataTablesDisplay({
   syntenyData,
-  speciesData,
+  genomeData,
   referenceData,
   className,
   onSyntenyRowClick,
@@ -559,7 +559,7 @@ export function RawDataTablesDisplay({
 }: RawDataTablesDisplayProps) {
   const TABS = [
     { id: 'synteny', label: 'Synteny', data: syntenyData, columns: syntenyColumns, filterColumn: 'query_name' },
-    { id: 'species', label: 'Species', data: speciesData, columns: speciesColumns, filterColumn: 'species_name' },
+    { id: 'genome', label: 'Genome', data: genomeData, columns: genomeColumns, filterColumn: 'genome_name' },
     { id: 'reference', label: 'Reference', data: referenceData?.chromosomeSizes, columns: referenceColumns, filterColumn: 'chromosome' },
     { id: 'genes', label: 'Genes', data: referenceData?.geneAnnotations, columns: geneColumns, filterColumn: 'symbol' },
     { id: 'breakpoints', label: 'Breakpoints', data: referenceData?.breakpoints, columns: breakpointColumns, filterColumn: 'ref_chr' },
@@ -575,7 +575,7 @@ export function RawDataTablesDisplay({
           ))}
         </TabsList>
         <TabsContent value="summary" className="mt-8">
-          <SummaryDashboard syntenyData={syntenyData} speciesData={speciesData} referenceData={referenceData} />
+          <SummaryDashboard syntenyData={syntenyData} genomeData={genomeData} referenceData={referenceData} />
         </TabsContent>
         {TABS.map(tab => (
           <TabsContent key={tab.id} value={tab.id} className="mt-8">
@@ -604,7 +604,7 @@ export function RawDataTablesDisplay({
 export function DataViewerDrawer({
   children,
   syntenyData,
-  speciesData,
+  genomeData,
   referenceData,
   onSyntenyRowClick,
   selectedSynteny,
@@ -630,7 +630,7 @@ export function DataViewerDrawer({
             <div className='mt-4'>
               <RawDataTablesDisplay
                 syntenyData={syntenyData}
-                speciesData={speciesData}
+                genomeData={genomeData}
                 referenceData={referenceData}
                 onSyntenyRowClick={onSyntenyRowClick}
                 selectedSynteny={selectedSynteny}

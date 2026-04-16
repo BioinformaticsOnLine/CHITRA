@@ -107,15 +107,15 @@ interface ControlsMenuProps {
   selectedSynteny: SyntenyData[];
   selectedMutationTypes: Map<string, MutationType>;
   onMutationTypeSelect: (syntenyId: string, mutationType?: MutationType) => void;
-  customSpeciesColors: Map<string, string>;
-  onSpeciesColorChange: (species: string, color: string) => void;
-  onResetSpeciesColors: () => void;
+  customGenomeColors: Map<string, string>;
+  onGenomeColorChange: (genome: string, color: string) => void;
+  onResetGenomeColors: () => void;
   onAddCustomMutationType: (name: string, color: string) => void;
   mutationColors: Record<string, string>;
   config: ConfigProps;
   onConfigChange: (newConfig: Partial<ConfigProps>) => void;
   onResetLayout: () => void;
-  speciesData: ChromosomeData[]; // Assuming ChromosomeData contains species_name
+  genomeData: ChromosomeData[]; // Assuming ChromosomeData contains genome_name
   showConnectedOnly: boolean;
   setShowConnectedOnly: (show: boolean) => void;
   zoomLevel: number;
@@ -138,10 +138,10 @@ export const ControlsMenu = ({
   selectedSynteny,
   selectedMutationTypes,
   onMutationTypeSelect,
-  customSpeciesColors,
-  onSpeciesColorChange,
-  onResetSpeciesColors,
-  speciesData,
+  customGenomeColors,
+  onGenomeColorChange,
+  onResetGenomeColors,
+  genomeData,
   showConnectedOnly,
   setShowConnectedOnly,
   zoomLevel,
@@ -205,9 +205,9 @@ export const ControlsMenu = ({
             onClose={() => setShowSettingsPanel(false)}
             config={config}
             onConfigChange={onConfigChange}
-            speciesData={speciesData}
-            onResetSpeciesColors={onResetSpeciesColors}
-            onSpeciesColorChange={onSpeciesColorChange}
+            genomeData={genomeData}
+            onResetGenomeColors={onResetGenomeColors}
+            onGenomeColorChange={onGenomeColorChange}
             onResetLayout={onResetLayout}
           />
         </PopoverContent>
@@ -263,7 +263,7 @@ export const ControlsMenu = ({
                               {link.query_chr}
                             </div>
                             <Badge variant="secondary" className="h-4 text-[10px] px-1 font-normal overflow-hidden flex-wrap">
-                              {link.query_name || 'Species 2'}
+                              {link.query_name || 'Genome 2'}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -454,7 +454,7 @@ export const ControlsMenu = ({
                                     {link.query_chr}
                                   </div>
                                   <Badge variant="secondary" className="h-4 text-[10px] px-1 font-normal overflow-hidden flex-wrap">
-                                    {link.query_name || 'Species 2'}
+                                    {link.query_name || 'Genome 2'}
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-1.5 flex-wrap">

@@ -5,7 +5,7 @@ Basic Synteny Dataset Generator
 
 Creates a simple synteny dataset with:
 - Reference genome (5 chromosomes)
-- 2 species with clear synteny relationships
+- 2 genome with clear synteny relationships
 - Easy to understand patterns for testing/demo
 
 Perfect for quick testing of Chitra visualization.
@@ -18,7 +18,7 @@ from pathlib import Path
 
 def generate_basic_synteny_set(output_dir="public/example/basic_set"):
     """
-    Generate a basic synteny dataset with reference + 2 species
+    Generate a basic synteny dataset with reference + 2 genome
     
     Args:
         output_dir (str): Directory to save the CSV files
@@ -65,16 +65,16 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
     ref_df.to_csv(ref_file, index=False)
     print(f"✓ Saved: {ref_file}")
     
-    # ===== 2. Generate Species Data =====
-    print("📊 Generating species data...")
+    # ===== 2. Generate Genome Data =====
+    print("📊 Generating genome data...")
     
-    species_data = []
-    species_names = ['Species_A', 'Species_B']
+    genome_data = []
+    genome_names = ['Genome_A', 'Genome_B']
     
-    for species in species_names:
+    for genome in genome_names:
         for chr_name, base_size in ref_chr_data.items():
             # Add some size variation (±10%)
-            if species == 'Species_A':
+            if genome == 'Genome_A':
                 size_factor = 0.95  # Slightly smaller
             else:
                 size_factor = 1.05  # Slightly larger
@@ -82,11 +82,11 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
             chr_size = int(base_size * size_factor)
             
             # Centromere positions with slight variation
-            centromere_start = int(chr_size * (0.45 + (0.02 if species == 'Species_A' else -0.02)))
-            centromere_end = int(chr_size * (0.55 + (0.02 if species == 'Species_A' else -0.02)))
+            centromere_start = int(chr_size * (0.45 + (0.02 if genome == 'Genome_A' else -0.02)))
+            centromere_end = int(chr_size * (0.55 + (0.02 if genome == 'Genome_A' else -0.02)))
             
-            species_data.append({
-                'species_name': species,
+            genome_data.append({
+                'genome_name': genome,
                 'chr_id': chr_name,
                 'chr_type': 'chromosome',
                 'chr_size_bp': chr_size,
@@ -94,10 +94,10 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
                 'centromere_end': centromere_end
             })
     
-    species_df = pd.DataFrame(species_data)
-    species_file = output_path / 'species_data.csv'
-    species_df.to_csv(species_file, index=False)
-    print(f"✓ Saved: {species_file}")
+    genome_df = pd.DataFrame(genome_data)
+    genome_file = output_path / 'genome_data.csv'
+    genome_df.to_csv(genome_file, index=False)
+    print(f"✓ Saved: {genome_file}")
     
     # ===== 3. Generate Simple Synteny Data =====
     print("📊 Generating synteny data...")
@@ -107,8 +107,8 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
     # Create clear, predictable synteny patterns
     for chr_name, ref_size in ref_chr_data.items():
         
-        # Species A - mostly forward orientation with some inversions
-        species_a_size = int(ref_size * 0.95)
+        # Genome A - mostly forward orientation with some inversions
+        genome_a_size = int(ref_size * 0.95)
         
         if chr_name in ['chr1', 'chr3', 'chr5']:  # Forward orientation
             # Create 3 synteny blocks per chromosome
@@ -118,12 +118,12 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
                 ref_start = i * block_size + 1_000_000
                 ref_end = ref_start + block_size - 500_000
                 
-                # Corresponding positions in species A (with slight compression)
+                # Corresponding positions in genome A (with slight compression)
                 query_start = int(i * block_size * 0.95) + 1_000_000
                 query_end = int(query_start + (block_size - 500_000) * 0.95)
                 
                 synteny_data.append({
-                    'query_name': 'Species_A',
+                    'query_name': 'Genome_A',
                     'query_chr': chr_name,
                     'query_start': query_start,
                     'query_end': query_end,
@@ -143,12 +143,12 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
                 ref_start = i * block_size + 2_000_000
                 ref_end = ref_start + block_size - 1_000_000
                 
-                # Reverse mapping in species A
+                # Reverse mapping in genome A
                 query_start = int((2-i-1) * block_size * 0.95) + 2_000_000
                 query_end = int(query_start + (block_size - 1_000_000) * 0.95)
                 
                 synteny_data.append({
-                    'query_name': 'Species_A',
+                    'query_name': 'Genome_A',
                     'query_chr': chr_name,
                     'query_start': query_start,
                     'query_end': query_end,
@@ -160,8 +160,8 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
                     'qry_lvl': 'chromosome'
                 })
         
-        # Species B - different pattern with size variations
-        species_b_size = int(ref_size * 1.05)
+        # Genome B - different pattern with size variations
+        genome_b_size = int(ref_size * 1.05)
         
         if chr_name in ['chr1', 'chr2']:  # More complex patterns
             # Create blocks with different size ratios
@@ -174,11 +174,11 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
             for ref_start_pct, ref_end_pct, query_start_pct, query_end_pct, strand in patterns:
                 ref_start = int(ref_size * ref_start_pct)
                 ref_end = int(ref_size * ref_end_pct)
-                query_start = int(species_b_size * query_start_pct)
-                query_end = int(species_b_size * query_end_pct)
+                query_start = int(genome_b_size * query_start_pct)
+                query_end = int(genome_b_size * query_end_pct)
                 
                 synteny_data.append({
-                    'query_name': 'Species_B',
+                    'query_name': 'Genome_B',
                     'query_chr': chr_name,
                     'query_start': query_start,
                     'query_end': query_end,
@@ -199,12 +199,12 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
                 ref_start = i * block_size + 1_500_000
                 ref_end = ref_start + block_size - 800_000
                 
-                # Species B positions (with expansion)
+                # Genome B positions (with expansion)
                 query_start = int(i * block_size * 1.05) + 1_500_000
                 query_end = int(query_start + (block_size - 800_000) * 1.05)
                 
                 synteny_data.append({
-                    'query_name': 'Species_B',
+                    'query_name': 'Genome_B',
                     'query_chr': chr_name,
                     'query_start': query_start,
                     'query_end': query_end,
@@ -227,17 +227,17 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
     print(f"📁 Location: {output_path.absolute()}")
     print(f"📊 Summary:")
     print(f"   • Reference chromosomes: {len(ref_df)}")
-    print(f"   • Species: 2 (Species_A, Species_B)")
-    print(f"   • Total species chromosomes: {len(species_df)}")
+    print(f"   • Genome: 2 (Genome_A, Genome_B)")
+    print(f"   • Total genome chromosomes: {len(genome_df)}")
     print(f"   • Synteny blocks: {len(synteny_df)}")
     
     # Show synteny patterns
     print(f"\n📈 Synteny Patterns:")
-    for species in ['Species_A', 'Species_B']:
-        species_blocks = synteny_df[synteny_df['query_name'] == species]
-        forward_count = len(species_blocks[species_blocks['query_strand'] == '+'])
-        reverse_count = len(species_blocks[species_blocks['query_strand'] == '-'])
-        print(f"   • {species}: {len(species_blocks)} blocks ({forward_count} forward, {reverse_count} reverse)")
+    for genome in ['Genome_A', 'Genome_B']:
+        genome_blocks = synteny_df[synteny_df['query_name'] == genome]
+        forward_count = len(genome_blocks[genome_blocks['query_strand'] == '+'])
+        reverse_count = len(genome_blocks[genome_blocks['query_strand'] == '-'])
+        print(f"   • {genome}: {len(genome_blocks)} blocks ({forward_count} forward, {reverse_count} reverse)")
     
     # Show size variations
     synteny_df['ref_size'] = synteny_df['ref_end'] - synteny_df['ref_start']
@@ -261,7 +261,7 @@ def generate_basic_synteny_set(output_dir="public/example/basic_set"):
     
     return {
         'reference': ref_df,
-        'species': species_df,
+        'genome': genome_df,
         'synteny': synteny_df,
         'output_dir': str(output_path)
     }

@@ -436,11 +436,11 @@ export function ChordView({
   }, [svgRef]);
 
   const refChromosome = selectedBlock ? referenceData.find(d =>
-    d.species_name === selectedBlock.ref_name && d.chr_id === selectedBlock.ref_chr
+    d.genome_name === selectedBlock.ref_name && d.chr_id === selectedBlock.ref_chr
   ) : null;
 
   const queryChromosome = selectedBlock ? referenceData.find(d =>
-    d.species_name === selectedBlock.query_name && d.chr_id === selectedBlock.query_chr
+    d.genome_name === selectedBlock.query_name && d.chr_id === selectedBlock.query_chr
   ) : null;
 
   // Add resize observer to update viewBox

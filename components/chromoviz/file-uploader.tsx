@@ -58,7 +58,7 @@ export const FILE_CONFIGS = {
       title: "Synteny Data File",
       description: "Contains information about syntenic blocks between genomes",
       format: [
-        { field: "query_name", desc: "Query species name" },
+        { field: "query_name", desc: "Query genome name" },
         { field: "query_chr", desc: "Query chromosome ID" },
         { field: "query_start", desc: "Start position in query" },
         { field: "query_end", desc: "End position in query" },
@@ -66,7 +66,7 @@ export const FILE_CONFIGS = {
         { field: "ref_chr", desc: "Reference chromosome ID" },
         { field: "ref_start", desc: "Start position in reference" },
         { field: "ref_end", desc: "End position in reference" },
-        { field: "ref_name", desc: "Reference species name" },
+        { field: "ref_name", desc: "Reference genome name" },
         { field: "qry_lvl", desc: "Query level" }
       ]
     },
@@ -77,7 +77,7 @@ export const FILE_CONFIGS = {
       query_end: +d.query_end,
       ref_start: +d.ref_start,
       ref_end: +d.ref_end,
-      query_name: d.query_name || d.species_name || "Unknown",
+      query_name: d.query_name || d.genome_name || "Unknown",
       ref_name: d.ref_name || "Reference",
       qry_lvl: d.qry_lvl || "synteny",
       symbol: d.symbol || "",
@@ -86,14 +86,14 @@ export const FILE_CONFIGS = {
       GeneID: d.GeneID || ""
     })
   },
-  species: {
-    title: "Species Data",
-    description: "Upload species_data.csv file",
+  genome: {
+    title: "Genome Data",
+    description: "Upload genome_data.csv file",
     tooltip: {
-      title: "Species Data File",
-      description: "Contains chromosome information for each species",
+      title: "Genome Data File",
+      description: "Contains chromosome information for each genome",
       format: [
-        { field: "species_name", desc: "Name of the species" },
+        { field: "genome_name", desc: "Name of the genome" },
         { field: "chr_id", desc: "Chromosome identifier" },
         { field: "chr_type", desc: "Type of chromosome" },
         { field: "chr_size_bp", desc: "Chromosome size in base pairs" },
@@ -191,7 +191,7 @@ const GRADIENT_CONFIGS = {
     gradient: "from-blue-500/10 via-cyan-500/10 to-teal-500/10",
     hover: "hover:from-blue-500/20 hover:via-cyan-500/20 hover:to-teal-500/20"
   },
-  species: {
+  genome: {
     gradient: "from-purple-500/10 via-pink-500/10 to-rose-500/10",
     hover: "hover:from-purple-500/20 hover:via-pink-500/20 hover:to-rose-500/20"
   },
@@ -472,7 +472,7 @@ export function CSVUploader({ onDataLoad, type, required = true }: FileUploaderP
 interface FileUploaderGroupProps {
   onDataLoad: {
     synteny: (data: any[], datasetId?: string) => void;
-    species: (data: any[], datasetId?: string) => void;
+    genome: (data: any[], datasetId?: string) => void;
     reference: (data: any[], datasetId?: string) => void;
     annotations: (data: any[], datasetId?: string) => void;
     breakpoints?: (data: any[], datasetId?: string) => void;
@@ -528,7 +528,7 @@ export function FileUploaderGroup({ onDataLoad, user, children, trigger }: FileU
   const [isOpen, setIsOpen] = useState(false);
   const [uploadedData, setUploadedData] = useState<{
     synteny?: { file: File, data: any[] };
-    species?: { file: File, data: any[] };
+    genome?: { file: File, data: any[] };
     reference?: { file: File, data: any[] };
     annotations?: { file: File, data: any[] };
     breakpoints?: { file: File, data: any[] };
@@ -543,11 +543,11 @@ export function FileUploaderGroup({ onDataLoad, user, children, trigger }: FileU
   };
 
   const handleVisualize = async () => {
-    if (uploadedData.synteny && uploadedData.species && uploadedData.reference) {
+    if (uploadedData.synteny && uploadedData.genome && uploadedData.reference) {
       // Pass parsed data to parent
       // We don't upload here anymore; saving is handled by the main Save action in page.tsx
       onDataLoad.reference(uploadedData.reference.data);
-      onDataLoad.species(uploadedData.species.data);
+      onDataLoad.genome(uploadedData.genome.data);
       onDataLoad.synteny(uploadedData.synteny.data);
       if (uploadedData.annotations) {
         onDataLoad.annotations(uploadedData.annotations.data);
@@ -560,7 +560,7 @@ export function FileUploaderGroup({ onDataLoad, user, children, trigger }: FileU
   };
 
   const requiredFilesCount = Object.keys(uploadedData).filter(key =>
-    ['synteny', 'species', 'reference'].includes(key)
+    ['synteny', 'genome', 'reference'].includes(key)
   ).length;
 
   const optionalFilesCount = Object.keys(uploadedData).filter(key =>
@@ -617,12 +617,12 @@ export function FileUploaderGroup({ onDataLoad, user, children, trigger }: FileU
                 {/* Required Files Content */}
                 <div className="h-full flex flex-col">
                   <div className="flex-1 overflow-auto p-4 space-y-3">
-                    {['synteny', 'species', 'reference'].map((type) => (
+                    {['synteny', 'genome', 'reference'].map((type) => (
                       <motion.div
                         key={type}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: ['synteny', 'species', 'reference'].indexOf(type) * 0.1 }}
+                        transition={{ delay: ['synteny', 'genome', 'reference'].indexOf(type) * 0.1 }}
                       >
                         <CSVUploader
                           type={type as keyof typeof FILE_CONFIGS}
@@ -723,12 +723,12 @@ export function FileUploaderGroup({ onDataLoad, user, children, trigger }: FileU
             </div>
 
             <div className="p-4 space-y-3">
-              {['synteny', 'species', 'reference'].map((type) => (
+              {['synteny', 'genome', 'reference'].map((type) => (
                 <motion.div
                   key={type}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: ['synteny', 'species', 'reference'].indexOf(type) * 0.1 }}
+                  transition={{ delay: ['synteny', 'genome', 'reference'].indexOf(type) * 0.1 }}
                 >
                   <CSVUploader
                     type={type as keyof typeof FILE_CONFIGS}

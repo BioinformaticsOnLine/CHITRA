@@ -32,12 +32,12 @@ export interface VisualizationState {
     datasetId?: string;
 
     // Visual Configuration
-    selectedSpecies: string[];
+    selectedGenomes: string[];
     selectedChromosomes: string[];
     selectedSyntenyIds?: string[];
     alignmentFilter: 'all' | 'forward' | 'reverse';
     selectedMutationTypes: Array<[string, any]>; // Serialized Map
-    customSpeciesColors: Array<[string, string]>; // Serialized Map
+    customGenomeColors: Array<[string, string]>; // Serialized Map
 
     // View State
     mainViewTransform: { k: number; x: number; y: number };
@@ -286,10 +286,10 @@ function generateSyntenyCSV(data: SyntenyData[]): string {
     return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
 }
 
-function generateSpeciesCSV(data: ChromosomeData[]): string {
-    const headers = ['species_name', 'chr_id', 'chr_size_bp', 'centromere_start', 'centromere_end'];
+function generateGenomeCSV(data: ChromosomeData[]): string {
+    const headers = ['genome_name', 'chr_id', 'chr_size_bp', 'centromere_start', 'centromere_end'];
     const rows = data.map(d => [
-        d.species_name, d.chr_id, d.chr_size_bp.toString(),
+        d.genome_name, d.chr_id, d.chr_size_bp.toString(),
         d.centromere_start?.toString() || '', d.centromere_end?.toString() || ''
     ]);
     return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -308,8 +308,8 @@ function downloadCSV(data: SyntenyData[], filename: string) {
     // Re-use logic for compatibility, though we prefer raw format for save
     // The previous implementation used human-readable headers, keeping them for download button
     const headers = [
-        'Reference Species', 'Reference Chromosome', 'Reference Start (Mb)', 'Reference End (Mb)',
-        'Query Species', 'Query Chromosome', 'Query Start (Mb)', 'Query End (Mb)',
+        'Reference Genome', 'Reference Chromosome', 'Reference Start (Mb)', 'Reference End (Mb)',
+        'Query Genome', 'Query Chromosome', 'Query Start (Mb)', 'Query End (Mb)',
         'Size (Mb)', 'Orientation'
     ];
     const rows = data.map(link => [
@@ -332,7 +332,7 @@ function downloadCSV(data: SyntenyData[], filename: string) {
 interface ChromosomeOption {
     label: string;
     value: string;
-    species: string;
+    genome: string;
 }
 
 // Add new components for better organization
@@ -381,18 +381,18 @@ const FilterSection = ({
 
 
 // Add this component
-const SpeciesColorPicker = ({
-    species,
+const GenomeColorPicker = ({
+    genome,
     currentColor,
     onChange
 }: {
-    species: string;
+    genome: string;
     currentColor: string;
     onChange: (color: string) => void;
 }) => {
     return (
         <div className="flex items-center gap-2">
-            <span>{species}</span>
+            <span>{genome}</span>
             <input
                 type="color"
                 value={currentColor}
@@ -407,11 +407,11 @@ const SpeciesColorPicker = ({
 function ChromoVizContent() {
     const { theme, setTheme } = useTheme();
     const [syntenyData, setSyntenyData] = useState<SyntenyData[]>([]);
-    const [speciesData, setSpeciesData] = useState<ChromosomeData[]>([]);
+    const [genomeData, setGenomeData] = useState<ChromosomeData[]>([]);
     const [referenceData, setReferenceData] = useState<ReferenceGenomeData | null>(null);
     const [geneAnnotations, setGeneAnnotations] = useState<GeneAnnotation[]>([]);
     const [breakpointsData, setBreakpointsData] = useState<ChromosomeBreakpoint[]>([]);
-    const [selectedSpecies, setSelectedSpecies] = useState<string[]>([]);
+    const [selectedGenomes, setSelectedGenomes] = useState<string[]>([]);
     const [isInitialized, setIsInitialized] = useState(false);
     const [selectedChromosomes, setSelectedChromosomes] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -427,7 +427,7 @@ function ChromoVizContent() {
     const [isAtRoot, setIsAtRoot] = useState(true);
     const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
     const [selectedMutationTypes, setSelectedMutationTypes] = useState<Map<string, MutationType>>(new Map());
-    const [customSpeciesColors, setCustomSpeciesColors] = useState<Map<string, string>>(new Map());
+    const [customGenomeColors, setCustomGenomeColors] = useState<Map<string, string>>(new Map());
     const [showKonvaDemo, setShowKonvaDemo] = useState(false); // State for Konva demo
     const [currentShareId, setCurrentShareId] = useState<string | null>(null); // For storing the ID of a saved state
     const [isLoadingShare, setIsLoadingShare] = useState(false); // To indicate when sharing/loading shared state
@@ -441,7 +441,7 @@ function ChromoVizContent() {
         chromosomeSpacing: CHROMOSOME_CONFIG.SPACING,
         annotationHeight: GENE_ANNOTATION_CONFIG.HEIGHT,
         maxVisibleGenes: OPTIMIZATION_CONFIG.MAX_VISIBLE_GENES,
-        customSpeciesColors: new Map(),
+        customGenomeColors: new Map(),
         widthScale: 50,
     });
 
@@ -463,9 +463,9 @@ function ChromoVizContent() {
     useEffect(() => {
         setConfig(prevConfig => ({
             ...prevConfig,
-            customSpeciesColors: customSpeciesColors
+            customGenomeColors: customGenomeColors
         }));
-    }, [customSpeciesColors]);
+    }, [customGenomeColors]);
 
     // Clerk handles auth state
     const { user } = useUser();
@@ -482,51 +482,51 @@ function ChromoVizContent() {
 
     // Initialize from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem('selectedSpecies');
+        const saved = localStorage.getItem('selectedGenomes');
         if (saved) {
-            setSelectedSpecies(JSON.parse(saved));
+            setSelectedGenomes(JSON.parse(saved));
         }
         setIsInitialized(true);
     }, []);
 
     // Create options for the MultiSelect component
-    const speciesOptions = React.useMemo(() =>
-        Array.from(new Set(speciesData.map(d => d.species_name)))
-            .map(species => ({
-                label: species.replace('_', ' '),
-                value: species,
+    const genomeOptions = React.useMemo(() =>
+        Array.from(new Set(genomeData.map(d => d.genome_name)))
+            .map(genome => ({
+                label: genome.replace('_', ' '),
+                value: genome,
             }))
             .sort((a, b) => a.label.localeCompare(b.label)),
-        [speciesData]
+        [genomeData]
     );
 
-    // Update the chromosome options to include species information
+    // Update the chromosome options to include genome information
     const chromosomeOptions = React.useMemo(() => {
-        const options: { [species: string]: ChromosomeOption[] } = {};
+        const options: { [genome: string]: ChromosomeOption[] } = {};
 
-        speciesData.forEach(d => {
-            if (!options[d.species_name]) {
-                options[d.species_name] = [];
+        genomeData.forEach(d => {
+            if (!options[d.genome_name]) {
+                options[d.genome_name] = [];
             }
-            options[d.species_name].push({
+            options[d.genome_name].push({
                 label: d.chr_id,
-                value: `${d.species_name}:${d.chr_id}`, // Make value unique by including species
-                species: d.species_name
+                value: `${d.genome_name}:${d.chr_id}`, // Make value unique by including genome
+                genome: d.genome_name
             });
         });
 
         // Add reference genome chromosomes
         if (referenceData?.chromosomeSizes) {
-            const refSpecies = 'Reference';
-            options[refSpecies] = referenceData.chromosomeSizes.map(chr => ({
+            const refGenome = 'Reference';
+            options[refGenome] = referenceData.chromosomeSizes.map(chr => ({
                 label: chr.chromosome,
                 value: `ref:${chr.chromosome}`, // Prefix reference chromosomes
-                species: refSpecies
+                genome: refGenome
             }));
         }
 
         return options;
-    }, [speciesData, referenceData]);
+    }, [genomeData, referenceData]);
 
     // Helper function to extract chromosome ID from combined value
     const getChromosomeId = (value: string) => {
@@ -534,52 +534,52 @@ function ChromoVizContent() {
         return parts[parts.length - 1];
     };
 
-    // Helper function to extract species from combined value
-    const getSpeciesFromValue = (value: string) => {
+    // Helper function to extract genome from combined value
+    const getGenomeFromValue = (value: string) => {
         return value.split(':')[0];
     };
 
     // Set initial selections when data is loaded
     useEffect(() => {
-        if (speciesData.length > 0 && selectedSpecies.length === 0 && isInitialized) {
-            // Only set all species as selected by default if there are no saved selections
-            const allSpeciesValues = speciesOptions.map(option => option.value);
-            setSelectedSpecies(allSpeciesValues);
-            localStorage.setItem('selectedSpecies', JSON.stringify(allSpeciesValues));
+        if (genomeData.length > 0 && selectedGenomes.length === 0 && isInitialized) {
+            // Only set all genome as selected by default if there are no saved selections
+            const allGenomeValues = genomeOptions.map(option => option.value);
+            setSelectedGenomes(allGenomeValues);
+            localStorage.setItem('selectedGenomes', JSON.stringify(allGenomeValues));
 
-            // Set top N chromosomes as selected by default for each species
+            // Set top N chromosomes as selected by default for each genome
             const initialSelectedChromosomes: string[] = [];
-            const maxChromosomesPerSpecies = 3;
+            const maxChromosomesPerGenome = 3;
 
-            for (const speciesName in chromosomeOptions) {
-                if (chromosomeOptions.hasOwnProperty(speciesName)) {
-                    const speciesChrOptions = chromosomeOptions[speciesName];
+            for (const genomeName in chromosomeOptions) {
+                if (chromosomeOptions.hasOwnProperty(genomeName)) {
+                    const genomeChrOptions = chromosomeOptions[genomeName];
                     // Sort chromosomes by label (e.g., Chr1, Chr2, ..., Chr10, etc.)
                     // This assumes a natural sort order is desired for "top N"
-                    const sortedChrOptions = [...speciesChrOptions].sort((a, b) =>
+                    const sortedChrOptions = [...genomeChrOptions].sort((a, b) =>
                         a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' })
                     );
                     const topNChrValues = sortedChrOptions
-                        .slice(0, maxChromosomesPerSpecies)
+                        .slice(0, maxChromosomesPerGenome)
                         .map(option => option.value);
                     initialSelectedChromosomes.push(...topNChrValues);
                 }
             }
             setSelectedChromosomes(initialSelectedChromosomes);
         }
-    }, [speciesData, speciesOptions, chromosomeOptions, selectedSpecies, isInitialized]);
+    }, [genomeData, genomeOptions, chromosomeOptions, selectedGenomes, isInitialized]);
 
     // Save to localStorage whenever selection changes
     useEffect(() => {
         if (isInitialized) {
-            localStorage.setItem('selectedSpecies', JSON.stringify(selectedSpecies));
+            localStorage.setItem('selectedGenomes', JSON.stringify(selectedGenomes));
         }
-    }, [selectedSpecies, isInitialized]);
+    }, [selectedGenomes, isInitialized]);
 
     const [isUsingExample, setIsUsingExample] = useState(true);
     const [uploadedFiles, setUploadedFiles] = useState({
         synteny: false,
-        species: false,
+        genome: false,
         reference: false
     });
     const [selectedSynteny, setSelectedSynteny] = useState<SyntenyData[]>([]);
@@ -593,8 +593,8 @@ function ChromoVizContent() {
     const [showAnnotations, setShowAnnotations] = useState(false);
     const [showWelcomeCard, setShowWelcomeCard] = useState(true);
 
-    // Get reference species from synteny data
-    const referenceSpecies = React.useMemo(() => {
+    // Get reference genome from synteny data
+    const referenceGenome = React.useMemo(() => {
         if (syntenyData.length === 0) return null;
         return syntenyData[0].ref_name;
     }, [syntenyData]);
@@ -608,7 +608,7 @@ function ChromoVizContent() {
         setShowWelcomeCard(false);
 
         // Reset selections to ensure new data is not filtered by stale selections
-        setSelectedSpecies([]);
+        setSelectedGenomes([]);
         setSelectedChromosomes([]);
         setSelectedSynteny([]); // Also reset selected synteny blocks
 
@@ -617,7 +617,7 @@ function ChromoVizContent() {
             const [syntenyResponse, referenceResponse, refChromosomeSizes] =
                 await Promise.all([
                     d3.csv(`${path}/synteny_data.csv`, parseCSVRow),
-                    d3.csv(`${path}/species_data.csv`, parseChromosomeRow),
+                    d3.csv(`${path}/genome_data.csv`, parseChromosomeRow),
                     d3.csv(`${path}/ref_chromosome_sizes.csv`, parseChromosomeSizeRow),
                 ]);
 
@@ -641,7 +641,7 @@ function ChromoVizContent() {
             }
 
             setSyntenyData(syntenyResponse);
-            setSpeciesData(referenceResponse);
+            setGenomeData(referenceResponse);
             setReferenceData({
                 chromosomeSizes: refChromosomeSizes,
                 geneAnnotations: geneAnnotations,
@@ -665,15 +665,15 @@ function ChromoVizContent() {
             if (datasetId) setCurrentDatasetId(datasetId);
             setIsUsingExample(false);
         },
-        species: (data: ChromosomeData[], datasetId?: string) => {
-            console.log('Loading species data:', data);
-            setSpeciesData(prev => {
+        genome: (data: ChromosomeData[], datasetId?: string) => {
+            console.log('Loading genome data:', data);
+            setGenomeData(prev => {
                 const newData = [...data];
-                // Sort to ensure reference species is at the bottom
+                // Sort to ensure reference genome is at the bottom
                 newData.sort((a, b) => {
-                    if (a.species_name === 'Reference') return 1;
-                    if (b.species_name === 'Reference') return -1;
-                    return a.species_name.localeCompare(b.species_name);
+                    if (a.genome_name === 'Reference') return 1;
+                    if (b.genome_name === 'Reference') return -1;
+                    return a.genome_name.localeCompare(b.genome_name);
                 });
                 return newData;
             });
@@ -730,7 +730,7 @@ function ChromoVizContent() {
     };
 
     const canGenerateVisualization = uploadedFiles.synteny &&
-        uploadedFiles.species &&
+        uploadedFiles.genome &&
         uploadedFiles.reference;
 
     const handleGenerateVisualization = () => {
@@ -745,12 +745,12 @@ function ChromoVizContent() {
         // Ensure all critical data pieces are available before full computation
         if (!referenceData?.chromosomeSizes ||
             !syntenyData || syntenyData.length === 0 ||
-            !speciesData || speciesData.length === 0 ||
-            !referenceSpecies) {
+            !genomeData || genomeData.length === 0 ||
+            !referenceGenome) {
             // Return a minimal, safe structure if data is incomplete
             const refChrsWhenIncomplete = referenceData?.chromosomeSizes
                 ? referenceData.chromosomeSizes.map(chr => ({
-                    species_name: referenceSpecies || "Reference",
+                    genome_name: referenceGenome || "Reference",
                     chr_id: chr.chromosome,
                     chr_type: 'chromosome' as 'chromosome',
                     chr_size_bp: +chr.size,
@@ -765,9 +765,9 @@ function ChromoVizContent() {
             };
         }
 
-        // 1. Filter synteny by selected species and chromosomes
+        // 1. Filter synteny by selected genome and chromosomes
         const baseFilteredSynteny = syntenyData.filter(d =>
-            (selectedSpecies.length === 0 || selectedSpecies.includes(d.query_name)) &&
+            (selectedGenomes.length === 0 || selectedGenomes.includes(d.query_name)) &&
             (selectedChromosomes.length === 0 ||
                 (selectedChromosomes.includes(`ref:${d.ref_chr}`) ||
                     selectedChromosomes.includes(`${d.query_name}:${d.query_chr}`)))
@@ -795,7 +795,7 @@ function ChromoVizContent() {
             const referenceChromosomes = referenceData.chromosomeSizes
                 .filter(chr => connectedChrIds.has(`ref:${chr.chromosome}`))
                 .map(chr => ({
-                    species_name: referenceSpecies,
+                    genome_name: referenceGenome,
                     chr_id: chr.chromosome,
                     chr_type: 'chromosome' as 'chromosome',
                     chr_size_bp: +chr.size,
@@ -806,11 +806,11 @@ function ChromoVizContent() {
                     ) || []
                 }));
 
-            const filteredSpeciesData = speciesData.filter(d =>
-                connectedChrIds.has(`${d.species_name}:${d.chr_id}`)
+            const filteredGenomeData = genomeData.filter(d =>
+                connectedChrIds.has(`${d.genome_name}:${d.chr_id}`)
             );
 
-            finalReferenceData = [...filteredSpeciesData, ...referenceChromosomes];
+            finalReferenceData = [...filteredGenomeData, ...referenceChromosomes];
         } else {
             // If not filtering by connection, show all selected chromosomes
             const referenceChromosomes = referenceData.chromosomeSizes
@@ -819,7 +819,7 @@ function ChromoVizContent() {
                     selectedChromosomes.includes(`ref:${chr.chromosome}`)
                 )
                 .map(chr => ({
-                    species_name: referenceSpecies,
+                    genome_name: referenceGenome,
                     chr_id: chr.chromosome,
                     chr_type: 'chromosome' as 'chromosome',
                     chr_size_bp: +chr.size,
@@ -830,23 +830,23 @@ function ChromoVizContent() {
                     ) || []
                 }));
 
-            const filteredSpeciesData = speciesData.filter(d =>
-                (selectedSpecies.length === 0 || selectedSpecies.includes(d.species_name)) &&
-                (selectedChromosomes.length === 0 || selectedChromosomes.includes(`${d.species_name}:${d.chr_id}`)) &&
-                d.species_name !== referenceSpecies
+            const filteredGenomeData = genomeData.filter(d =>
+                (selectedGenomes.length === 0 || selectedGenomes.includes(d.genome_name)) &&
+                (selectedChromosomes.length === 0 || selectedChromosomes.includes(`${d.genome_name}:${d.chr_id}`)) &&
+                d.genome_name !== referenceGenome
             );
 
-            finalReferenceData = [...filteredSpeciesData, ...referenceChromosomes];
+            finalReferenceData = [...filteredGenomeData, ...referenceChromosomes];
         }
 
-        // Always put reference genome at bottom, and naturally sort chromosomes within species
+        // Always put reference genome at bottom, and naturally sort chromosomes within genome
         finalReferenceData.sort((a, b) => {
-            if (a.species_name !== b.species_name) {
-                if (a.species_name === referenceSpecies) return 1;
-                if (b.species_name === referenceSpecies) return -1;
-                return a.species_name.localeCompare(b.species_name);
+            if (a.genome_name !== b.genome_name) {
+                if (a.genome_name === referenceGenome) return 1;
+                if (b.genome_name === referenceGenome) return -1;
+                return a.genome_name.localeCompare(b.genome_name);
             }
-            // Same species, naturally sort by chromosome ID (e.g., chr1, chr2, chr10)
+            // Same genome, naturally sort by chromosome ID (e.g., chr1, chr2, chr10)
             return a.chr_id.localeCompare(b.chr_id, undefined, { numeric: true, sensitivity: 'base' });
         });
 
@@ -854,7 +854,7 @@ function ChromoVizContent() {
             referenceData: finalReferenceData,
             syntenyData: finalSyntenyData
         };
-    }, [speciesData, syntenyData, selectedSpecies, selectedChromosomes, referenceSpecies, referenceData, showConnectedOnly, alignmentFilter]);
+    }, [genomeData, syntenyData, selectedGenomes, selectedChromosomes, referenceGenome, referenceData, showConnectedOnly, alignmentFilter]);
 
     const handleZoomIn = () => {
         if (!svgRef.current || !zoomBehaviorRef.current) return;
@@ -976,11 +976,11 @@ function ChromoVizContent() {
 
     const handleResetToWelcome = () => {
         setSyntenyData([]);
-        setSpeciesData([]);
+        setGenomeData([]);
         setReferenceData(null);
         setGeneAnnotations([]);
         setBreakpointsData([]);
-        setSelectedSpecies([]);
+        setSelectedGenomes([]);
         setSelectedChromosomes([]);
         setSelectedSynteny([]);
         setShowWelcomeCard(true);
@@ -999,32 +999,32 @@ function ChromoVizContent() {
         });
     }, []);
 
-    const handleSpeciesColorChange = useCallback((species: string, color: string) => {
-        setCustomSpeciesColors(prev => {
+    const handleGenomeColorChange = useCallback((genome: string, color: string) => {
+        setCustomGenomeColors(prev => {
             const newColors = new Map(prev);
-            newColors.set(species, color);
+            newColors.set(genome, color);
             return newColors;
         });
     }, []);
 
-    const handleResetSpeciesColors = useCallback(() => {
-        setCustomSpeciesColors(new Map());
-        localStorage.removeItem('speciesColors');
-        toast.success("Species colors have been reset to their default values.");
+    const handleResetGenomeColors = useCallback(() => {
+        setCustomGenomeColors(new Map());
+        localStorage.removeItem('genomeColors');
+        toast.success("Genome colors have been reset to their default values.");
     }, []);
 
     // Save colors to localStorage when they change
     useEffect(() => {
-        if (customSpeciesColors.size > 0) {
-            localStorage.setItem('speciesColors', JSON.stringify(Array.from(customSpeciesColors.entries())));
+        if (customGenomeColors.size > 0) {
+            localStorage.setItem('genomeColors', JSON.stringify(Array.from(customGenomeColors.entries())));
         }
-    }, [customSpeciesColors]);
+    }, [customGenomeColors]);
 
     // Load colors from localStorage on mount
     useEffect(() => {
-        const savedColors = localStorage.getItem('speciesColors');
+        const savedColors = localStorage.getItem('genomeColors');
         if (savedColors) {
-            setCustomSpeciesColors(new Map(JSON.parse(savedColors)));
+            setCustomGenomeColors(new Map(JSON.parse(savedColors)));
         }
     }, []);
 
@@ -1044,16 +1044,16 @@ function ChromoVizContent() {
                 // Load Data
                 if (state.dataSetType === 'example' && state.exampleDataSetPath) {
                     await loadExampleData(state.exampleDataSetPath);
-                } else if (fileUrls && (fileUrls.synteny || fileUrls.species)) {
+                } else if (fileUrls && (fileUrls.synteny || fileUrls.genome)) {
                     // Fetch files from URLs
-                    const [syntenyText, speciesText, refText] = await Promise.all([
+                    const [syntenyText, genomeText, refText] = await Promise.all([
                         fileUrls.synteny ? fetch(fileUrls.synteny).then(r => r.text()) : Promise.resolve(""),
-                        fileUrls.species ? fetch(fileUrls.species).then(r => r.text()) : Promise.resolve(""),
+                        fileUrls.genome ? fetch(fileUrls.genome).then(r => r.text()) : Promise.resolve(""),
                         fileUrls.reference ? fetch(fileUrls.reference).then(r => r.text()) : Promise.resolve("")
                     ]);
 
                     if (syntenyText) handleDataLoad.synteny(d3.csvParse(syntenyText, parseCSVRow));
-                    if (speciesText) handleDataLoad.species(d3.csvParse(speciesText, parseChromosomeRow));
+                    if (genomeText) handleDataLoad.genome(d3.csvParse(genomeText, parseChromosomeRow));
                     if (refText) handleDataLoad.reference(d3.csvParse(refText, parseChromosomeSizeRow));
                 }
 
@@ -1061,11 +1061,11 @@ function ChromoVizContent() {
                 // Restore State
                 const vizState = state.visualizationState;
                 if (vizState) {
-                    if (vizState.selectedSpecies) setSelectedSpecies(vizState.selectedSpecies);
+                    if (vizState.selectedGenomes) setSelectedGenomes(vizState.selectedGenomes);
                     if (vizState.selectedChromosomes) setSelectedChromosomes(vizState.selectedChromosomes);
                     if (vizState.alignmentFilter) setAlignmentFilter(vizState.alignmentFilter as any);
                     if (vizState.selectedMutationTypes) setSelectedMutationTypes(new Map(vizState.selectedMutationTypes as any));
-                    if (vizState.customSpeciesColors) setCustomSpeciesColors(new Map(vizState.customSpeciesColors as any));
+                    if (vizState.customGenomeColors) setCustomGenomeColors(new Map(vizState.customGenomeColors as any));
 
                     if (vizState.mainViewTransform) {
                         const transform = d3.zoomIdentity
@@ -1121,7 +1121,7 @@ function ChromoVizContent() {
             const currentTransform = d3.zoomTransform(svgRef.current!);
 
             // 1. Upload files if Custom DB
-            let fileStorageIds: { synteny?: string; species?: string; reference?: string } | undefined = undefined;
+            let fileStorageIds: { synteny?: string; genome?: string; reference?: string } | undefined = undefined;
 
             if (!isUsingExample) {
                 // Upload Synteny
@@ -1130,11 +1130,11 @@ function ChromoVizContent() {
                 const syntenyRes = await fetch(syntenyUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: syntenyCSV });
                 const { storageId: syntenyId } = await syntenyRes.json();
 
-                // Upload Species
-                const speciesCSV = generateSpeciesCSV(speciesData);
-                const speciesUrl = await generateUploadUrl();
-                const speciesRes = await fetch(speciesUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: speciesCSV });
-                const { storageId: speciesId } = await speciesRes.json();
+                // Upload Genome
+                const genomeCSV = generateGenomeCSV(genomeData);
+                const genomeUrl = await generateUploadUrl();
+                const genomeRes = await fetch(genomeUrl, { method: "POST", headers: { "Content-Type": "text/csv" }, body: genomeCSV });
+                const { storageId: genomeId } = await genomeRes.json();
 
                 // Upload Reference
                 let referenceId = undefined;
@@ -1148,7 +1148,7 @@ function ChromoVizContent() {
 
                 fileStorageIds = {
                     synteny: syntenyId,
-                    species: speciesId,
+                    genome: genomeId,
                     reference: referenceId
                 };
             }
@@ -1156,12 +1156,12 @@ function ChromoVizContent() {
             // 2. Prepare Visualization State
             const visualizationState = {
                 version: "1.0",
-                selectedSpecies,
+                selectedGenomes,
                 selectedChromosomes,
                 selectedSyntenyIds: selectedSynteny.map(s => `${s.ref_chr}-${s.query_chr}-${s.ref_start}-${s.query_start}`),
                 alignmentFilter,
                 selectedMutationTypes: Array.from(selectedMutationTypes.entries()),
-                customSpeciesColors: Array.from(customSpeciesColors.entries()),
+                customGenomeColors: Array.from(customGenomeColors.entries()),
                 mainViewTransform: {
                     k: currentTransform.k,
                     x: currentTransform.x,
@@ -1261,11 +1261,11 @@ function ChromoVizContent() {
                                     {/* Controls Bar */}
                                     <FloatingHUDBar
                                         onLoadExample={loadExampleData}
-                                        selectedSpecies={selectedSpecies}
-                                        setSelectedSpecies={setSelectedSpecies}
+                                        selectedGenomes={selectedGenomes}
+                                        setSelectedGenomes={setSelectedGenomes}
                                         selectedChromosomes={selectedChromosomes}
                                         setSelectedChromosomes={setSelectedChromosomes}
-                                        speciesOptions={speciesOptions}
+                                        genomeOptions={genomeOptions}
                                         chromosomeOptions={chromosomeOptions}
                                         referenceGenomeData={referenceData}
                                         syntenyData={syntenyData}
@@ -1275,7 +1275,7 @@ function ChromoVizContent() {
                                         showTooltips={showTooltips}
                                         onToggleTooltips={() => setShowTooltips(!showTooltips)}
                                         onResetToWelcome={handleResetToWelcome}
-                                        speciesData={speciesData}
+                                        genomeData={genomeData}
                                         onShare={handleShare}
                                         onSave={handleSave}
                                         user={user}
@@ -1397,9 +1397,9 @@ function ChromoVizContent() {
                                                             setShowTooltips={setShowTooltips}
                                                             selectedMutationTypes={selectedMutationTypes}
                                                             onMutationTypeSelect={handleMutationTypeSelect}
-                                                            customSpeciesColors={customSpeciesColors}
-                                                            onSpeciesColorChange={handleSpeciesColorChange}
-                                                            onResetSpeciesColors={handleResetSpeciesColors}
+                                                            customGenomeColors={customGenomeColors}
+                                                            onGenomeColorChange={handleGenomeColorChange}
+                                                            onResetGenomeColors={handleResetGenomeColors}
                                                             showConnectedOnly={showConnectedOnly}
                                                             setShowConnectedOnly={setShowConnectedOnly}
                                                             config={config}
@@ -1515,7 +1515,7 @@ function ChromoVizContent() {
                                                                     {
                                                                         id: 'set1',
                                                                         name: 'Basic Synteny',
-                                                                        description: 'Simple synteny visualization between species',
+                                                                        description: 'Simple synteny visualization between genome',
                                                                         color: 'bg-blue-400',
                                                                         borderColor: 'border-blue-200 dark:border-blue-800',
                                                                         hoverBg: 'hover:bg-blue-50/50 dark:hover:bg-blue-900/10',
@@ -1523,8 +1523,8 @@ function ChromoVizContent() {
                                                                     },
                                                                     {
                                                                         id: 'set2',
-                                                                        name: 'Multi-Species',
-                                                                        description: 'Complex synteny relationships across multiple species',
+                                                                        name: 'Multi-Genome',
+                                                                        description: 'Complex synteny relationships across multiple genome',
                                                                         color: 'bg-emerald-400',
                                                                         borderColor: 'border-emerald-200 dark:border-emerald-800',
                                                                         hoverBg: 'hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10',
@@ -1610,7 +1610,7 @@ function ChromoVizContent() {
                                     </div>
 
                                     {/* Inline Tables Section - Below Visualization and Details */}
-                                    {!isFullScreen && !showWelcomeCard && (syntenyData.length > 0 || speciesData.length > 0 || referenceData) && (
+                                    {!isFullScreen && !showWelcomeCard && (syntenyData.length > 0 || genomeData.length > 0 || referenceData) && (
                                         <div className="col-span-12 mt-6 grid grid-cols-12 gap-6">
                                             {/* Left Column: Raw Data Tables */}
                                             <div className="col-span-12 md:col-span-8 lg:col-span-9">
@@ -1624,7 +1624,7 @@ function ChromoVizContent() {
                                                     <CardContent className="p-3">
                                                         <RawDataTablesDisplay
                                                             syntenyData={syntenyData}
-                                                            speciesData={speciesData}
+                                                            genomeData={genomeData}
                                                             referenceData={referenceData}
                                                             onSyntenyRowClick={handleSyntenyToggle}
                                                             selectedSynteny={selectedSynteny}

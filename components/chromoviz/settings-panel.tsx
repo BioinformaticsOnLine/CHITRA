@@ -17,7 +17,7 @@ export interface ConfigProps {
   chromosomeSpacing: number;
   annotationHeight: number;
   maxVisibleGenes: number;
-  customSpeciesColors: Map<string, string>;
+  customGenomeColors: Map<string, string>;
   widthScale?: number;
 }
 
@@ -26,9 +26,9 @@ interface SettingsPanelProps {
   onClose: () => void;
   config: ConfigProps;
   onConfigChange: (newConfig: Partial<ConfigProps>) => void;
-  speciesData: ChromosomeData[];
-  onResetSpeciesColors: () => void;
-  onSpeciesColorChange: (species: string, color: string) => void;
+  genomeData: ChromosomeData[];
+  onResetGenomeColors: () => void;
+  onGenomeColorChange: (genome: string, color: string) => void;
   onResetLayout: () => void;
 }
 
@@ -37,9 +37,9 @@ export const SettingsPanel = ({
   onClose,
   config,
   onConfigChange,
-  speciesData,
-  onResetSpeciesColors,
-  onSpeciesColorChange,
+  genomeData,
+  onResetGenomeColors,
+  onGenomeColorChange,
   onResetLayout,
 }: SettingsPanelProps) => {
   if (!isOpen) return null;
@@ -75,24 +75,24 @@ export const SettingsPanel = ({
         <div className="p-3">
           <TabsContent value="colors">
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-              {Array.from(new Set(speciesData.map(d => d.species_name))).map((species, index) => {
+              {Array.from(new Set(genomeData.map(d => d.genome_name))).map((genome, index) => {
                 // Get the actual color being used - either custom or default from d3.schemePastel1
-                const currentColor = config.customSpeciesColors.get(species) ||
+                const currentColor = config.customGenomeColors.get(genome) ||
                   (typeof window !== 'undefined' && window.d3?.schemePastel1
                     ? window.d3.schemePastel1[index % window.d3.schemePastel1.length]
                     : ['#fbb4ae', '#b3cde3', '#ccebc5', '#decbe4', '#fed9a6', '#ffffcc', '#e5d8bd', '#fddaec', '#f2f2f2'][index % 9]
                   );
 
                 return (
-                  <div key={species} className="flex items-center justify-between gap-2">
-                    <Label htmlFor={`color-${species}`} className="text-sm font-normal flex-1 truncate" title={species}>
-                      {species.replace(/_/g, " ")}
+                  <div key={genome} className="flex items-center justify-between gap-2">
+                    <Label htmlFor={`color-${genome}`} className="text-sm font-normal flex-1 truncate" title={genome}>
+                      {genome.replace(/_/g, " ")}
                     </Label>
                     <input
-                      id={`color-${species}`}
+                      id={`color-${genome}`}
                       type="color"
                       value={currentColor}
-                      onChange={(e) => onSpeciesColorChange(species, e.target.value)}
+                      onChange={(e) => onGenomeColorChange(genome, e.target.value)}
                       className="w-6 h-6 rounded cursor-pointer border-none bg-transparent"
                     />
                   </div>
@@ -100,7 +100,7 @@ export const SettingsPanel = ({
               })}
             </div>
             <div className="mt-2 pt-2 border-t">
-              <Button variant="ghost" size="sm" className="w-full justify-center h-7" onClick={onResetSpeciesColors}>
+              <Button variant="ghost" size="sm" className="w-full justify-center h-7" onClick={onResetGenomeColors}>
                 <RotateCcw className="h-3 w-3 mr-1.5" />
                 <span className="text-xs">Reset Colors</span>
               </Button>

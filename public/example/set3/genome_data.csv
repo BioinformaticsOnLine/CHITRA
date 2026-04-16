@@ -1,4 +1,4 @@
-species_name,chr_id,chr_type,chr_size_bp,centromere_start,centromere_end
+genome_name,chr_id,chr_type,chr_size_bp,centromere_start,centromere_end
 Adineta_ricciae,chr3,Scaffold,21077837,,
 Adineta_ricciae,chr1,Scaffold,20932626,,
 Adineta_ricciae,chr5,Scaffold,17364795,,

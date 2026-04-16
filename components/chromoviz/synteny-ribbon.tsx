@@ -6,12 +6,12 @@ import { SyntenyData, ChromosomeData } from "@/app/types";
 
 interface SyntenyRibbonProps {
   link: SyntenyData;
-  sourceSpecies: string;
-  targetSpecies: string;
+  sourceGenome: string;
+  targetGenome: string;
   sourceY: number;
   targetY: number;
   xScale: d3.ScaleLinear<number, number>;
-  speciesColorScale: d3.ScaleOrdinal<string, string>;
+  genomeColorScale: d3.ScaleOrdinal<string, string>;
   referenceData: ChromosomeData[];
   container: d3.Selection<any, unknown, null, undefined>;
   onHover: (event: any, link: SyntenyData) => void;
@@ -25,7 +25,7 @@ interface SyntenyRibbonProps {
   selectedChromosomes: string[];
   mutationType?: MutationType;
   useCustomColors?: boolean;
-  customSpeciesColors?: Map<string, string>;
+  customGenomeColors?: Map<string, string>;
   mutationColors?: Record<string, string>;
 }
 
@@ -82,12 +82,12 @@ export const mutationFullNames: Record<string, string> = {
 
 export function renderSyntenyRibbon({
   link,
-  sourceSpecies,
-  targetSpecies,
+  sourceGenome,
+  targetGenome,
   sourceY,
   targetY,
   xScale,
-  speciesColorScale,
+  genomeColorScale,
   referenceData,
   container: g,
   onHover,
@@ -101,7 +101,7 @@ export function renderSyntenyRibbon({
   selectedChromosomes,
   mutationType,
   useCustomColors = false,
-  customSpeciesColors,
+  customGenomeColors,
   mutationColors = MUTATION_COLORS,
 }: SyntenyRibbonProps) {
   const MUTATION_COLOR_VARIANTS = Object.entries(mutationColors).reduce((acc, [key, color]) => ({
@@ -156,10 +156,10 @@ export function renderSyntenyRibbon({
   if (!isInViewport()) return null;
 
   // Get chromosome positions
-  const getXPosition = (species: string, chr: string, pos: number) => {
-    const speciesChrs = referenceData.filter(d => d.species_name === species);
+  const getXPosition = (genome: string, chr: string, pos: number) => {
+    const genomeChrs = referenceData.filter(d => d.genome_name === genome);
     let xPos = 0;
-    for (const chromosome of speciesChrs) {
+    for (const chromosome of genomeChrs) {
       if (chromosome.chr_id === chr) {
         const constrainedPos = Math.min(Math.max(pos, 0), chromosome.chr_size_bp);
         return xPos + xScale(constrainedPos);
@@ -170,28 +170,28 @@ export function renderSyntenyRibbon({
   };
 
   // Calculate ribbon positions
-  const x1 = getXPosition(sourceSpecies, link.ref_chr, link.ref_start);
-  const x2 = getXPosition(targetSpecies, link.query_chr, link.query_start);
+  const x1 = getXPosition(sourceGenome, link.ref_chr, link.ref_start);
+  const x2 = getXPosition(targetGenome, link.query_chr, link.query_start);
 
   // Get chromosome sizes for width constraints
   const sourceChromosome = referenceData.find(c =>
-    c.species_name === sourceSpecies && c.chr_id === link.ref_chr
+    c.genome_name === sourceGenome && c.chr_id === link.ref_chr
   );
   const targetChromosome = referenceData.find(c =>
-    c.species_name === targetSpecies && c.chr_id === link.query_chr
+    c.genome_name === targetGenome && c.chr_id === link.query_chr
   );
 
   // Calculate constrained widths
   const width1 = sourceChromosome ?
     Math.min(
       xScale(link.ref_end - link.ref_start),
-      xScale(sourceChromosome.chr_size_bp) - (x1 - getXPosition(sourceSpecies, link.ref_chr, 0))
+      xScale(sourceChromosome.chr_size_bp) - (x1 - getXPosition(sourceGenome, link.ref_chr, 0))
     ) : 0;
 
   const width2 = targetChromosome ?
     Math.min(
       xScale(link.query_end - link.query_start),
-      xScale(targetChromosome.chr_size_bp) - (x2 - getXPosition(targetSpecies, link.query_chr, 0))
+      xScale(targetChromosome.chr_size_bp) - (x2 - getXPosition(targetGenome, link.query_chr, 0))
     ) : 0;
 
   // Create a unique identifier for this synteny ribbon
@@ -260,9 +260,9 @@ export function renderSyntenyRibbon({
     .attr("x2", x2)
     .attr("y2", targetY);
 
-  // Get the query species color with custom color support
-  const queryColor = customSpeciesColors?.get(targetSpecies) ||
-    speciesColorScale(targetSpecies);
+  // Get the query genome color with custom color support
+  const queryColor = customGenomeColors?.get(targetGenome) ||
+    genomeColorScale(targetGenome);
 
   // Create a more visible gradient with higher opacity
   gradient.append("stop")

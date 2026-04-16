@@ -8,13 +8,13 @@ icon: Eye
 
 # Visualising the Data
 
-The tool provides an intuitive and user-friendly platform for visualizing genomic data, enabling effective exploration of DNA segments, such as chromosomes, contigs, or scaffolds, across complete genomes. Through interactive features, users can easily identify and analyze synteny blocks (common genomic regions) between species.
+The tool provides an intuitive and user-friendly platform for visualizing genomic data, enabling effective exploration of DNA segments, such as chromosomes, contigs, or scaffolds, across complete genomes. Through interactive features, users can easily identify and analyze synteny blocks (common genomic regions) between genome.
 
 ![](/media/image2.png)
 
 ## Synteny Visualization
 
-- **Basic Synteny Comparison:** The tool displays synteny relationships between two genomes and a reference genome. Common synteny blocks between DNA segments of the species are linked by ribbons, providing a visually engaging and clear representation of genomic conservation.
+- **Basic Synteny Comparison:** The tool displays synteny relationships between two genomes and a reference genome. Common synteny blocks between DNA segments of the genome are linked by ribbons, providing a visually engaging and clear representation of genomic conservation.
 
 - By hovering over a ribbon, users can identify:
 
@@ -32,11 +32,11 @@ The tool provides an intuitive and user-friendly platform for visualizing genomi
 ## Ribbon Coloring & Meaning
 The color scheme is designed to be highly functional, encoding both structural origin and orientation data:
 - **Strand Orientation:** The synteny blocks themselves intrinsically encode orientation, automatically appearing in Blue (Forward strand) or Red (Reverse strand).
-- **Species Origin (Default):** By default, the synteny ribbons connecting blocks are colored based on the query species they originate from. This is highly informative in multi-genome alignments as it instantly clarifies which query species is connecting to the reference. These default species colors are fully customizable.
-- **User-Defined Rearrangements:** For known structural variations, users can select specific synteny ribbons and assign them custom colors via the Mutation Menu (e.g., coloring distinct inversion or translocation events), thereby overriding the default species colors.
+- **Genome Origin (Default):** By default, the synteny ribbons connecting blocks are colored based on the query genome they originate from. This is highly informative in multi-genome alignments as it instantly clarifies which query genome is connecting to the reference. These default genome colors are fully customizable.
+- **User-Defined Rearrangements:** For known structural variations, users can select specific synteny ribbons and assign them custom colors via the Mutation Menu (e.g., coloring distinct inversion or translocation events), thereby overriding the default genome colors.
 
 ## Accessibility & Customization
-- **Colorblind Palettes:** An accessibility toggle (♿) sits at the bottom right corner of the visualization. Users can instantly switch the application's entire visualization matrix—including synteny ribbons, markers, and species colors—to colorblind-safe palettes (e.g., Deuteranopia, Protanopia, Tritanopia palettes based on Wong, 2011).
+- **Colorblind Palettes:** An accessibility toggle (♿) sits at the bottom right corner of the visualization. Users can instantly switch the application's entire visualization matrix—including synteny ribbons, markers, and genome colors—to colorblind-safe palettes (e.g., Deuteranopia, Protanopia, Tritanopia palettes based on Wong, 2011).
 - **Chromosome Reordering:** In the top controls, a Floating 'Reorder' Panel allows users to drag-and-drop chromosomes to set a custom linear layout (e.g., placing chr5 next to chr2) and the visualization will instantly snap and redraw all ribbons to match.
 
 ## Data Table Integration

@@ -1,4 +1,4 @@
-species_name,chr_id,chr_type,chr_size_bp,centromere_start,centromere_end
+genome_name,chr_id,chr_type,chr_size_bp,centromere_start,centromere_end
 Pan_troglodytes,chr1,chromosome,49260118,19704047,21766138
 Pan_troglodytes,chr2,chromosome,123752918,49501167,52354808
 Pan_troglodytes,chr3,chromosome,94500599,37800239,40190375

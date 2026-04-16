@@ -25,8 +25,8 @@ const videos = [
     {
         id: "v2",
         src: "/media/v2.mp4",
-        title: "Multi-Species Comparison",
-        desc: "Compare genomic structures across multiple species"
+        title: "Multi-Genome Comparison",
+        desc: "Compare genomic structures across multiple genome"
     },
     {
         id: "v3",
@@ -384,12 +384,12 @@ export default function HeroSection() {
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-muted-foreground">Species data (CSV)</span>
+                                        <span className="text-sm text-muted-foreground">Genome data (CSV)</span>
                                         <div className="flex gap-1">
-                                            <Link href="/example/set1/species_data.csv" target="_blank" className="p-1.5 rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors" title="Preview">
+                                            <Link href="/example/set1/genome_data.csv" target="_blank" className="p-1.5 rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-colors" title="Preview">
                                                 <ExternalLink className="h-3 w-3" />
                                             </Link>
-                                            <a href="/example/set1/species_data.csv" download className="p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors" title="Download">
+                                            <a href="/example/set1/genome_data.csv" download className="p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors" title="Download">
                                                 <Download className="h-3 w-3" />
                                             </a>
                                         </div>

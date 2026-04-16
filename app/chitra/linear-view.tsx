@@ -94,9 +94,9 @@ interface ChromosomeSyntenyProps {
   setShowTooltips: (show: boolean) => void;
   selectedMutationTypes: Map<string, MutationType>;
   onMutationTypeSelect: (syntenyId: string, mutationType?: MutationType) => void; // Allow undefined
-  customSpeciesColors: Map<string, string>;
-  onSpeciesColorChange: (species: string, color: string) => void;
-  onResetSpeciesColors: () => void;
+  customGenomeColors: Map<string, string>;
+  onGenomeColorChange: (genome: string, color: string) => void;
+  onResetGenomeColors: () => void;
   showConnectedOnly: boolean;
   setShowConnectedOnly: (show: boolean) => void;
   config: ConfigProps;
@@ -139,9 +139,9 @@ export function ChromosomeSynteny({
   setShowTooltips,
   selectedMutationTypes = new Map(),
   onMutationTypeSelect,
-  customSpeciesColors,
-  onSpeciesColorChange,
-  onResetSpeciesColors,
+  customGenomeColors,
+  onGenomeColorChange,
+  onResetGenomeColors,
   showConnectedOnly,
   setShowConnectedOnly,
   config,
@@ -184,10 +184,10 @@ export function ChromosomeSynteny({
     }
   }, []);
 
-  const { colorBlindMode, getMutationColors, getSpeciesPalette } = useAccessibility();
+  const { colorBlindMode, getMutationColors, getGenomePalette } = useAccessibility();
 
   const accessibleMutationColors = getMutationColors();
-  const accessibleSpeciesPalette = getSpeciesPalette();
+  const accessibleGenomePalette = getGenomePalette();
 
   const allMutationColors = colorBlindMode !== 'none'
     ? { ...accessibleMutationColors, ...customMutationTypes }
@@ -629,17 +629,17 @@ export function ChromosomeSynteny({
     // Determine connected chromosomes if the filter is active
     const connectedChrIds = new Set<string>();
     syntenyData.forEach(link => {
-      // Assuming query_name is the species name for the query chromosome
+      // Assuming query_name is the genome name for the query chromosome
       connectedChrIds.add(`${link.ref_name}:${link.ref_chr}`);
       connectedChrIds.add(`${link.query_name}:${link.query_chr}`);
     });
 
     const displayedReferenceData = (showConnectedOnly
-      ? referenceData.filter(chr => connectedChrIds.has(`${chr.species_name}:${chr.chr_id}`))
+      ? referenceData.filter(chr => connectedChrIds.has(`${chr.genome_name}:${chr.chr_id}`))
       : [...referenceData])
       .sort((a, b) => {
-        if (a.species_name !== b.species_name) return 0;
-        const customOrder = chromosomeOrder.get(a.species_name);
+        if (a.genome_name !== b.genome_name) return 0;
+        const customOrder = chromosomeOrder.get(a.genome_name);
         if (!customOrder || customOrder.length === 0) return 0;
 
         const aIdx = customOrder.indexOf(a.chr_id);
@@ -650,12 +650,12 @@ export function ChromosomeSynteny({
         return aIdx - bIdx;
       });
 
-    // Group data by species
-    const speciesGroups = d3.group(displayedReferenceData, d => d.species_name);
-    const uniqueSpecies = Array.from(speciesGroups.keys());
+    // Group data by genome
+    const genomeGroups = d3.group(displayedReferenceData, d => d.genome_name);
+    const uniqueGenomes = Array.from(genomeGroups.keys());
 
     // Calculate layout parameters
-    const speciesSpacing = innerHeight / (uniqueSpecies.length + 1);
+    const genomeSpacing = innerHeight / (uniqueGenomes.length + 1);
 
     // Create color scale for ribbons
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -673,23 +673,23 @@ export function ChromosomeSynteny({
       .domain([0, maxChrSize])
       .range([0, effectiveWidth]); // Leave space for labels and apply scaling
 
-    // Modify the species color scale to use custom colors
-    const speciesColorScale = d3.scaleOrdinal<string>()
-      .domain(uniqueSpecies)
-      .range(uniqueSpecies.map(species =>
-        customSpeciesColors?.get(species) || accessibleSpeciesPalette[uniqueSpecies.indexOf(species) % accessibleSpeciesPalette.length]
+    // Modify the genome color scale to use custom colors
+    const genomeColorScale = d3.scaleOrdinal<string>()
+      .domain(uniqueGenomes)
+      .range(uniqueGenomes.map(genome =>
+        customGenomeColors?.get(genome) || accessibleGenomePalette[uniqueGenomes.indexOf(genome) % accessibleGenomePalette.length]
       ));
 
-    // Get reference species from synteny data
-    const referenceSpecies = syntenyData.length > 0 ? syntenyData[0].ref_name : '';
+    // Get reference genome from synteny data
+    const referenceGenome = syntenyData.length > 0 ? syntenyData[0].ref_name : '';
 
-    // Draw chromosomes for each species
-    uniqueSpecies.forEach((species, speciesIndex) => {
-      const speciesColor = speciesColorScale(species);
-      const speciesData = speciesGroups.get(species) || [];
-      const y = speciesIndex * speciesSpacing + speciesSpacing;
+    // Draw chromosomes for each genome
+    uniqueGenomes.forEach((genome, genomeIndex) => {
+      const genomeColor = genomeColorScale(genome);
+      const genomeData = genomeGroups.get(genome) || [];
+      const y = genomeIndex * genomeSpacing + genomeSpacing;
 
-      // Species label
+      // Genome label
       g.append("text")
         .attr("x", -10)
         .attr("y", y + config.chromosomeHeight / 2)
@@ -699,16 +699,16 @@ export function ChromosomeSynteny({
         .attr("font-family", resolvedFont)
         .attr("class", "text-foreground")
         .attr("fill", "currentColor")
-        .text(species.replace("_", " "));
+        .text(genome.replace("_", " "));
 
       let xOffset = 0;
-      speciesData.forEach((chr) => {
+      genomeData.forEach((chr) => {
         renderChromosome({
           chromosome: chr,
           xOffset,
           y,
           xScale,
-          speciesColor,
+          genomeColor,
           onHover: handleElementHover,
           onMove: handleElementMove,
           onLeave: handleElementLeave,
@@ -725,7 +725,7 @@ export function ChromosomeSynteny({
               reverse: GENE_ANNOTATION_CONFIG.COLORS.REVERSE,
             },
           },
-          isReferenceChromosome: species === referenceSpecies,
+          isReferenceChromosome: genome === referenceGenome,
         });
 
         xOffset += xScale(chr.chr_size_bp) + config.chromosomeSpacing * 2;
@@ -741,30 +741,30 @@ export function ChromosomeSynteny({
 
     // Render filtered ribbons in sorted order
     sortedData.forEach(link => {
-      const sourceSpecies = link.ref_name;
-      const targetSpecies = link.query_name;
+      const sourceGenome = link.ref_name;
+      const targetGenome = link.query_name;
 
-      if (!sourceSpecies || !targetSpecies) return;
+      if (!sourceGenome || !targetGenome) return;
 
-      const sourceIndex = uniqueSpecies.indexOf(sourceSpecies);
-      const targetIndex = uniqueSpecies.indexOf(targetSpecies);
+      const sourceIndex = uniqueGenomes.indexOf(sourceGenome);
+      const targetIndex = uniqueGenomes.indexOf(targetGenome);
 
       if (sourceIndex === -1 || targetIndex === -1) return;
 
-      const sourceY = sourceIndex * speciesSpacing + speciesSpacing;
-      const targetY = targetIndex * speciesSpacing + speciesSpacing;
+      const sourceY = sourceIndex * genomeSpacing + genomeSpacing;
+      const targetY = targetIndex * genomeSpacing + genomeSpacing;
 
       const syntenyId = `${link.ref_chr}-${link.query_chr}-${link.ref_start}-${link.query_start}`;
       const mutationType = selectedMutationTypes.get(syntenyId);
 
       renderSyntenyRibbon({
         link,
-        sourceSpecies,
-        targetSpecies,
+        sourceGenome,
+        targetGenome,
         sourceY,
         targetY,
         xScale,
-        speciesColorScale,
+        genomeColorScale,
         referenceData: displayedReferenceData,
         container: g,
         onHover: (event, link) => handleMouseOver(event, link, maxSyntenySizeMb),
@@ -793,7 +793,7 @@ export function ChromosomeSynteny({
 
         const chr = referenceData.find(c =>
           c.chr_id === event.target.dataset.chr &&
-          c.species_name === event.target.dataset.species
+          c.genome_name === event.target.dataset.genome
         );
         if (chr) {
           setTooltipInfo({
@@ -840,10 +840,10 @@ export function ChromosomeSynteny({
 
     // Add labels for breakpoints and gene annotations if they exist
     if (referenceGenomeData?.breakpoints && referenceGenomeData.breakpoints.length > 0) {
-      // Get reference species position (first species in the list)
-      const referenceSpecies = syntenyData.length > 0 ? syntenyData[0].ref_name : '';
-      const refSpeciesIndex = uniqueSpecies.indexOf(referenceSpecies);
-      const refY = refSpeciesIndex * speciesSpacing + speciesSpacing;
+      // Get reference genome position (first genome in the list)
+      const referenceGenome = syntenyData.length > 0 ? syntenyData[0].ref_name : '';
+      const refGenomeIndex = uniqueGenomes.indexOf(referenceGenome);
+      const refY = refGenomeIndex * genomeSpacing + genomeSpacing;
 
       // Position the label to be vertically aligned with the mirrored chromosome
       const mirroredChrY = refY + config.chromosomeHeight + 10; // Position of the mirrored chromosome
@@ -852,7 +852,7 @@ export function ChromosomeSynteny({
       // Add "Breakpoints" label with count
       const totalBreakpoints = referenceGenomeData.breakpoints.length;
       g.append("text")
-        .attr("x", -10)  // Same x position as species labels
+        .attr("x", -10)  // Same x position as genome labels
         .attr("y", labelY)
         .attr("text-anchor", "end")
         .attr("dominant-baseline", "middle")
@@ -865,10 +865,10 @@ export function ChromosomeSynteny({
 
     // Add Gene Annotations label if annotations exist and are enabled
     if (showAnnotations && referenceGenomeData?.geneAnnotations && referenceGenomeData.geneAnnotations.length > 0) {
-      // Get reference species position (first species in the list)
-      const referenceSpecies = syntenyData.length > 0 ? syntenyData[0].ref_name : '';
-      const refSpeciesIndex = uniqueSpecies.indexOf(referenceSpecies);
-      const refY = refSpeciesIndex * speciesSpacing + speciesSpacing;
+      // Get reference genome position (first genome in the list)
+      const referenceGenome = syntenyData.length > 0 ? syntenyData[0].ref_name : '';
+      const refGenomeIndex = uniqueGenomes.indexOf(referenceGenome);
+      const refY = refGenomeIndex * genomeSpacing + genomeSpacing;
 
       // Calculate position for gene annotation label
       let annotationLabelY = refY + config.chromosomeHeight + 10 + (config.chromosomeHeight / 2); // Default position
@@ -881,7 +881,7 @@ export function ChromosomeSynteny({
       // Add "Gene Annotations" label with count
       const totalGeneAnnotations = referenceGenomeData.geneAnnotations.length;
       g.append("text")
-        .attr("x", -10)  // Same x position as species labels
+        .attr("x", -10)  // Same x position as genome labels
         .attr("y", annotationLabelY)
         .attr("text-anchor", "end")
         .attr("dominant-baseline", "middle")
@@ -906,9 +906,9 @@ export function ChromosomeSynteny({
     showTooltips,
     selectedMutationTypes,
     onMutationTypeSelect,
-    customSpeciesColors,
+    customGenomeColors,
     colorBlindMode,
-    accessibleSpeciesPalette,
+    accessibleGenomePalette,
     showConnectedOnly,
     chromosomeOrder,
     isZoomUnlocked
@@ -1182,10 +1182,10 @@ export function ChromosomeSynteny({
             selectedSynteny={selectedSynteny}
             selectedMutationTypes={selectedMutationTypes}
             onMutationTypeSelect={onMutationTypeSelect}
-            customSpeciesColors={customSpeciesColors}
-            onSpeciesColorChange={onSpeciesColorChange}
-            onResetSpeciesColors={onResetSpeciesColors}
-            speciesData={referenceData}
+            customGenomeColors={customGenomeColors}
+            onGenomeColorChange={onGenomeColorChange}
+            onResetGenomeColors={onResetGenomeColors}
+            genomeData={referenceData}
             showConnectedOnly={showConnectedOnly}
             setShowConnectedOnly={setShowConnectedOnly}
             zoomLevel={zoom}

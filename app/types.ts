@@ -21,7 +21,7 @@ export interface SyntenyData {
 }
 
 export interface ChromosomeData {
-  species_name: string;
+  genome_name: string;
   chr_id: string;
   chr_type: string;
   chr_size_bp: number;

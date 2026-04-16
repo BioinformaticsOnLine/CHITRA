@@ -24,7 +24,7 @@ Below are the step-by-step instructions, accompanied by pictorial representation
 #### **Mandatory Input Files:**
 
 1. Synteny Data
-2. Species Data
+2. Genome Data
 3. Reference Chromosome Size
 
 #### **Optional Input Files:**
@@ -59,10 +59,10 @@ _Visualize synteny blocks among_ **three genomes**.
     </div>
   </div>
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
-    <span className="text-sm font-medium">species_data.csv</span>
+    <span className="text-sm font-medium">genome_data.csv</span>
     <div className="flex gap-2">
-      <CsvPreviewDrawer url="/example/set1/species_data.csv" filename="species_data.csv" />
-      <a href="/example/set1/species_data.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
+      <CsvPreviewDrawer url="/example/set1/genome_data.csv" filename="genome_data.csv" />
+      <a href="/example/set1/genome_data.csv" download className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors">Download</a>
     </div>
   </div>
   <div className="flex items-center justify-between p-3 rounded-lg border bg-card/50">
@@ -108,11 +108,11 @@ _Analyze annotated genomes_ using real datasets. Uses the same files as Basic Sy
 Three types of example datasets are available:
 
 ### 1. Basic Synteny
-- Simple synteny visualization between species.
+- Simple synteny visualization between genome.
 - Ideal for understanding the fundamental concepts of synteny blocks and chromosome mapping.
 
-### 2. Multi-Species
-- Complex synteny relationships across multiple species.
+### 2. Multi-Genome
+- Complex synteny relationships across multiple genome.
 - Allows comparison of genomic architecture across diverse organisms.
 - Includes data for multiple pairwise comparisons.
 
@@ -172,7 +172,7 @@ Before preparing your data, ensure your CSV files follow these column naming con
 | File | Required Columns | Description |
 | :--- | :--- | :--- |
 | **Synteny Data** | `ref_chr`, `ref_start`, `ref_end`, `query_chr`, `query_start`, `query_end`, `query_strand`, `ref_name`, `query_name` | Coordinates and orientation (`+`/`-`) of syntenic blocks between the reference and query. |
-| **Species Data** | `species_name`, `chr_id`, `chr_size_bp` | Full list of chromosomes and their sizes for all species involved. |
+| **Genome Data** | `genome_name`, `chr_id`, `chr_size_bp` | Full list of chromosomes and their sizes for all genome involved. |
 | **Reference Sizes** | `chromosome`, `size` | Specific sizes for the primary reference genome used for coordinates. |
 
 ### **Mapping from Popular Synteny Callers**

@@ -48,12 +48,12 @@ import { useTheme } from "next-themes";
 interface FloatingHUDBarProps {
   user?: any; // Deprecated, handled internally by Clerk
   onLoadExample: (path: string) => void;
-  selectedSpecies: string[];
-  setSelectedSpecies: (species: string[]) => void;
+  selectedGenomes: string[];
+  setSelectedGenomes: (genome: string[]) => void;
   selectedChromosomes: string[];
   setSelectedChromosomes: (chromosomes: string[]) => void;
-  speciesOptions: { label: string; value: string; }[];
-  chromosomeOptions: { [species: string]: { label: string; value: string; species: string; }[] };
+  genomeOptions: { label: string; value: string; }[];
+  chromosomeOptions: { [genome: string]: { label: string; value: string; genome: string; }[] };
   referenceGenomeData: any;
   syntenyData?: {
     ref_chr: string;
@@ -62,7 +62,7 @@ interface FloatingHUDBarProps {
   }[];
   onDataLoad: {
     synteny: (data: any) => void;
-    species: (data: any) => void;
+    genome: (data: any) => void;
     reference: (data: any) => void;
     annotations: (data: any) => void;
   };
@@ -71,7 +71,7 @@ interface FloatingHUDBarProps {
   showTooltips: boolean;
   onToggleTooltips: () => void;
   onResetToWelcome: () => void;
-  speciesData?: ChromosomeData[];
+  genomeData?: ChromosomeData[];
   onShare: (title: string, isPublic: boolean) => Promise<string | null>;
   onSave: (title: string) => Promise<string | null>;
   isDetailViewOpen: boolean;
@@ -88,11 +88,11 @@ interface FloatingHUDBarProps {
 export function FloatingHUDBar({
   user,
   onLoadExample,
-  selectedSpecies,
-  setSelectedSpecies,
+  selectedGenomes,
+  setSelectedGenomes,
   selectedChromosomes,
   setSelectedChromosomes,
-  speciesOptions,
+  genomeOptions,
   chromosomeOptions,
   referenceGenomeData,
   syntenyData,
@@ -102,7 +102,7 @@ export function FloatingHUDBar({
   showTooltips,
   onToggleTooltips,
   onResetToWelcome,
-  speciesData,
+  genomeData,
   onShare,
   onSave,
   isDetailViewOpen,
@@ -135,11 +135,11 @@ export function FloatingHUDBar({
 
   const downloadCSV = useCallback((data: SyntenyData[], filename: string) => {
     const headers = [
-      'Reference Species',
+      'Reference Genome',
       'Reference Chromosome',
       'Reference Start (Mb)',
       'Reference End (Mb)',
-      'Query Species',
+      'Query Genome',
       'Query Chromosome',
       'Query Start (Mb)',
       'Query End (Mb)',
@@ -336,13 +336,13 @@ export function FloatingHUDBar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
-                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!speciesData || speciesData.length === 0) ? (
+                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!genomeData || genomeData.length === 0) ? (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => {
                           toast.info("Load data first to use filters", {
-                            description: "Upload your files or select an example dataset to filter species, chromosomes, and synteny data.",
+                            description: "Upload your files or select an example dataset to filter genome, chromosomes, and synteny data.",
                             duration: 4000,
                           });
                         }}
@@ -361,11 +361,11 @@ export function FloatingHUDBar({
                       </Button>
                     ) : (
                       <FilterDrawer
-                        selectedSpecies={selectedSpecies}
-                        setSelectedSpecies={setSelectedSpecies}
+                        selectedGenomes={selectedGenomes}
+                        setSelectedGenomes={setSelectedGenomes}
                         selectedChromosomes={selectedChromosomes}
                         setSelectedChromosomes={setSelectedChromosomes}
-                        speciesOptions={speciesOptions}
+                        genomeOptions={genomeOptions}
                         chromosomeOptions={chromosomeOptions}
                         referenceGenomeData={referenceGenomeData}
                         syntenyData={syntenyData}
@@ -390,9 +390,9 @@ export function FloatingHUDBar({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
                   <p className="text-sm">
-                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!speciesData || speciesData.length === 0)
+                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!genomeData || genomeData.length === 0)
                       ? "Load data first to use filtering options"
-                      : "Filter species, chromosomes, and synteny data"
+                      : "Filter genome, chromosomes, and synteny data"
                     }
                   </p>
                 </TooltipContent>
@@ -436,7 +436,7 @@ export function FloatingHUDBar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div>
-                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!speciesData || speciesData.length === 0) ? (
+                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!genomeData || genomeData.length === 0) ? (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -465,7 +465,7 @@ export function FloatingHUDBar({
                     ) : (
                       <DataViewerDrawer
                         syntenyData={syntenyData as SyntenyData[]}
-                        speciesData={speciesData}
+                        genomeData={genomeData}
                         referenceData={referenceGenomeData}
                         isVertical={isVertical}
                         onSyntenyRowClick={onToggleSelection}
@@ -492,7 +492,7 @@ export function FloatingHUDBar({
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
                   <p className="text-sm">
-                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!speciesData || speciesData.length === 0)
+                    {(!syntenyData || syntenyData.length === 0) && !referenceGenomeData && (!genomeData || genomeData.length === 0)
                       ? "Load data first to view data tables"
                       : "View raw data tables and statistics"
                     }
@@ -695,7 +695,7 @@ export function FloatingHUDBar({
 
                                 {/* Main content */}
                                 <div className="space-y-2">
-                                  {/* Species and chromosome info */}
+                                  {/* Genome and chromosome info */}
                                   <div className="flex items-center gap-2">
                                     <span className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate max-w-[180px]">
                                       {link.ref_name} {link.ref_chr}

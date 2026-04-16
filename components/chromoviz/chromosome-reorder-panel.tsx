@@ -20,54 +20,54 @@ export function ChromosomeReorderPanel({
   chromosomeOrder,
   onChromosomeOrderChange,
 }: ChromosomeReorderPanelProps) {
-  // Group chromosomes by species
-  const speciesGroups = React.useMemo(() => {
+  // Group chromosomes by genome
+  const genomeGroups = React.useMemo(() => {
     const groups = new Map<string, string[]>()
     referenceData.forEach(chr => {
-      const existing = groups.get(chr.species_name) || []
+      const existing = groups.get(chr.genome_name) || []
       if (!existing.includes(chr.chr_id)) {
         existing.push(chr.chr_id)
       }
-      groups.set(chr.species_name, existing)
+      groups.set(chr.genome_name, existing)
     })
     return groups
   }, [referenceData])
 
-  // Get ordered list for a species (custom order or default)
-  const getOrderedChromosomes = useCallback((species: string): string[] => {
-    const customOrder = chromosomeOrder.get(species)
-    const defaultOrder = speciesGroups.get(species) || []
+  // Get ordered list for a genome (custom order or default)
+  const getOrderedChromosomes = useCallback((genome: string): string[] => {
+    const customOrder = chromosomeOrder.get(genome)
+    const defaultOrder = genomeGroups.get(genome) || []
     if (customOrder) {
       // Include any chromosomes in default that aren't in custom (new data)
       const missing = defaultOrder.filter(c => !customOrder.includes(c))
       return [...customOrder.filter(c => defaultOrder.includes(c)), ...missing]
     }
     return defaultOrder
-  }, [chromosomeOrder, speciesGroups])
+  }, [chromosomeOrder, genomeGroups])
 
-  const handleMoveUp = useCallback((species: string, chrId: string) => {
-    const ordered = [...getOrderedChromosomes(species)]
+  const handleMoveUp = useCallback((genome: string, chrId: string) => {
+    const ordered = [...getOrderedChromosomes(genome)]
     const idx = ordered.indexOf(chrId)
     if (idx <= 0) return
     ;[ordered[idx - 1], ordered[idx]] = [ordered[idx], ordered[idx - 1]]
     const newMap = new Map(chromosomeOrder)
-    newMap.set(species, ordered)
+    newMap.set(genome, ordered)
     onChromosomeOrderChange(newMap)
   }, [chromosomeOrder, getOrderedChromosomes, onChromosomeOrderChange])
 
-  const handleMoveDown = useCallback((species: string, chrId: string) => {
-    const ordered = [...getOrderedChromosomes(species)]
+  const handleMoveDown = useCallback((genome: string, chrId: string) => {
+    const ordered = [...getOrderedChromosomes(genome)]
     const idx = ordered.indexOf(chrId)
     if (idx < 0 || idx >= ordered.length - 1) return
     ;[ordered[idx], ordered[idx + 1]] = [ordered[idx + 1], ordered[idx]]
     const newMap = new Map(chromosomeOrder)
-    newMap.set(species, ordered)
+    newMap.set(genome, ordered)
     onChromosomeOrderChange(newMap)
   }, [chromosomeOrder, getOrderedChromosomes, onChromosomeOrderChange])
 
-  const handleReset = useCallback((species: string) => {
+  const handleReset = useCallback((genome: string) => {
     const newMap = new Map(chromosomeOrder)
-    newMap.delete(species)
+    newMap.delete(genome)
     onChromosomeOrderChange(newMap)
   }, [chromosomeOrder, onChromosomeOrderChange])
 
@@ -77,26 +77,26 @@ export function ChromosomeReorderPanel({
 
   // Drag state
   const [dragState, setDragState] = useState<{
-    species: string
+    genome: string
     chrId: string
     overChrId: string | null
   } | null>(null)
 
-  const handleDragStart = useCallback((species: string, chrId: string) => {
-    setDragState({ species, chrId, overChrId: null })
+  const handleDragStart = useCallback((genome: string, chrId: string) => {
+    setDragState({ genome, chrId, overChrId: null })
   }, [])
 
-  const handleDragOver = useCallback((e: React.DragEvent, species: string, chrId: string) => {
+  const handleDragOver = useCallback((e: React.DragEvent, genome: string, chrId: string) => {
     e.preventDefault()
-    if (dragState && dragState.species === species) {
+    if (dragState && dragState.genome === genome) {
       setDragState(prev => prev ? { ...prev, overChrId: chrId } : null)
     }
   }, [dragState])
 
-  const handleDrop = useCallback((species: string, targetChrId: string) => {
-    if (!dragState || dragState.species !== species) return
+  const handleDrop = useCallback((genome: string, targetChrId: string) => {
+    if (!dragState || dragState.genome !== genome) return
 
-    const ordered = [...getOrderedChromosomes(species)]
+    const ordered = [...getOrderedChromosomes(genome)]
     const fromIdx = ordered.indexOf(dragState.chrId)
     const toIdx = ordered.indexOf(targetChrId)
     if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
@@ -109,12 +109,12 @@ export function ChromosomeReorderPanel({
     ordered.splice(toIdx, 0, dragState.chrId)
 
     const newMap = new Map(chromosomeOrder)
-    newMap.set(species, ordered)
+    newMap.set(genome, ordered)
     onChromosomeOrderChange(newMap)
     setDragState(null)
   }, [dragState, chromosomeOrder, getOrderedChromosomes, onChromosomeOrderChange])
 
-  const species = Array.from(speciesGroups.keys())
+  const genome = Array.from(genomeGroups.keys())
   const hasCustomOrder = chromosomeOrder.size > 0
 
   return (
@@ -161,12 +161,12 @@ export function ChromosomeReorderPanel({
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Drag or use arrows to reorder chromosomes within each species.
+            Drag or use arrows to reorder chromosomes within each genome.
           </p>
         </SheetHeader>
 
         <div className="overflow-y-auto h-[calc(100vh-120px)] p-3 space-y-4">
-          {species.map(sp => {
+          {genome.map(sp => {
             const ordered = getOrderedChromosomes(sp)
             const hasCustom = chromosomeOrder.has(sp)
 
@@ -201,9 +201,9 @@ export function ChromosomeReorderPanel({
                         "flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs",
                         "bg-background border transition-all",
                         "hover:bg-muted/50",
-                        dragState?.chrId === chrId && dragState?.species === sp
+                        dragState?.chrId === chrId && dragState?.genome === sp
                           && "opacity-50 scale-95",
-                        dragState?.overChrId === chrId && dragState?.species === sp && dragState?.chrId !== chrId
+                        dragState?.overChrId === chrId && dragState?.genome === sp && dragState?.chrId !== chrId
                           && "border-primary border-dashed bg-primary/5",
                       )}
                     >

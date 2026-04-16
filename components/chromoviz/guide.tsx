@@ -34,8 +34,8 @@ const guideSteps: GuideStep[] = [
         href: "/docs/visualization#visualising-the-data",
     },
     {
-        title: "Multi-Species Comparison",
-        description: "Compare genomic data across multiple species to identify evolutionary relationships and conserved regions.",
+        title: "Multi-Genome Comparison",
+        description: "Compare genomic data across multiple genome to identify evolutionary relationships and conserved regions.",
         image: "/media/i2.webp",
         href: "/docs/how-to-use#2-multiple-synteny",
     },

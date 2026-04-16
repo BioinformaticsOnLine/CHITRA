@@ -109,7 +109,7 @@ export function AccessibilityButton() {
 
             <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
               <p className="text-[10px] text-muted-foreground text-center">
-                Changes apply to synteny ribbons, mutation tags, and species colors.
+                Changes apply to synteny ribbons, mutation tags, and genome colors.
               </p>
             </div>
           </motion.div>
