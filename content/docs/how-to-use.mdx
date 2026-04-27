@@ -189,7 +189,7 @@ If you are using external tools, map their outputs to CHITRA's schema as follows
 
 ### **SyntenyTracker2: The Preferred Workflow**
 
-For a seamless experience, we recommend **SyntenyTracker2** as the companion tool for data preparation. It is designed to modernize modular synteny pipelines and simplify the path to visualization.
+For a seamless experience, we recommend **SyntenyTracker2** as the companion tool for data preparation. It is designed to modernize modular synteny pipelines and simplify the path to visualization by generating data with exact genomic coordinates.
 
 **Installation via Conda:**
 ```bash
@@ -197,3 +197,18 @@ conda install jitendralab::syntenytracker2
 ```
 
 By using SyntenyTracker2, you can generate all mandatory input files for CHITRA in one step, ensuring high reproducibility and significantly reducing the data preparation burden.
+
+### **Working with MCScanX Data**
+
+[MCScanX](https://github.com/wyp1125/MCScanX) is a popular comparative genomics toolkit used to detect syntenic and collinear gene blocks from raw genome annotation and homology data. 
+
+**Typical MCScanX Workflow:**
+1. Generate all-vs-all BLASTP results between your genomes.
+2. Prepare a GFF/BED file containing your gene coordinates.
+3. Run MCScanX using these inputs to produce a `.collinearity` file for downstream analysis.
+
+> [!WARNING]
+> **Important Limitation regarding MCScanX:** 
+> MCScanX predicts collinearity by connecting individual homologous genes based on e-values (e.g., matching `chr1_gene001` to `chr3_gene221`), rather than exporting the exact start/end boundary coordinates of a contiguous physical DNA block. Since CHITRA currently requires exact boundary mappings (like those produced by Satsuma or SyntenyTracker) to render physical chromosome ribbons, MCScanX `.collinearity` outputs currently require you to run a custom intermediate script to convert those gene-to-gene links into standard block coordinates before uploading to CHITRA.
+
+**Future Support:** In a future release, CHITRA plans to directly support parsing `.collinearity` output files. We intend to automatically infer and group these connected lower-e-value threshold genes to bridge and generate broader syntenic regions between chromosomes directly within the application.
