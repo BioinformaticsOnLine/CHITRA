@@ -19,7 +19,7 @@ import {
     ChevronRight,
 } from "lucide-react";
 import * as d3 from 'd3';
-import { KonvaSynteny } from './konva-synteny';
+
 import { SyntenyData, ChromosomeData, ReferenceGenomeData, GeneAnnotation, ChromosomeBreakpoint } from '../types';
 // import { visualizationService, VisualizationState } from "@/lib/visualization-service";
 import { api } from "@/convex/_generated/api";
@@ -54,7 +54,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { LiquidButton } from "@/components/ui/liquid";
 import { FlipButton } from "@/components/ui/flip";
-import { Switch } from "@/components/ui/switch";
 import { ChordView } from "./chord-view";
 import { Label } from "@/components/ui/label"
 import { InlineSyntenyDisplay } from "@/components/chromoviz/inline-synteny-display";
@@ -428,7 +427,7 @@ function ChromoVizContent() {
     const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
     const [selectedMutationTypes, setSelectedMutationTypes] = useState<Map<string, MutationType>>(new Map());
     const [customGenomeColors, setCustomGenomeColors] = useState<Map<string, string>>(new Map());
-    const [showKonvaDemo, setShowKonvaDemo] = useState(false); // State for Konva demo
+
     const [currentShareId, setCurrentShareId] = useState<string | null>(null); // For storing the ID of a saved state
     const [isLoadingShare, setIsLoadingShare] = useState(false); // To indicate when sharing/loading shared state
     const [downloadProgress, setDownloadProgress] = useState<{ current: number; total: number } | null>(null);
@@ -1331,19 +1330,7 @@ function ChromoVizContent() {
                                                                     <span className="hidden sm:inline">Go Back</span>
                                                                 </Button>
                                                                 <CardTitle className="text-lg font-medium">Linear Synteny Visualization</CardTitle>
-                                                                <div className="flex items-center gap-1.5 ml-auto">
-                                                                    <Switch
-                                                                        id="draggable-view"
-                                                                        checked={showKonvaDemo}
-                                                                        onCheckedChange={() => setShowKonvaDemo(!showKonvaDemo)}
-                                                                    />
-                                                                    <label htmlFor="draggable-view" className="text-xs text-muted-foreground whitespace-nowrap">
-                                                                        Draggable View
-                                                                    </label>
-                                                                    <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                                                                        Beta
-                                                                    </Badge>
-                                                                </div>
+
                                                             </div>
                                                             <div className="h-8 border-l pl-4">
                                                                 <TipsCarousel variant="compact" className="w-[300px]" />
@@ -1359,17 +1346,7 @@ function ChromoVizContent() {
                                                             downloadProgress={downloadProgress}
                                                         />
                                                     </div>
-                                                ) : showKonvaDemo && syntenyData.length > 0 && referenceData && !showWelcomeCard ? ( // Added referenceData check for Konva
-                                                    <div className="flex-1 min-h-0">
-                                                        <KonvaSynteny
-                                                            referenceData={filteredData.referenceData}
-                                                            syntenyData={filteredData.syntenyData}
-                                                            alignmentFilter={alignmentFilter}
-                                                            setAlignmentFilter={setAlignmentFilter}
-                                                            onBack={() => setShowKonvaDemo(false)}
-                                                        />
-                                                    </div>
-                                                ) : syntenyData.length > 0 && referenceData && !showWelcomeCard ? ( // Added referenceData check
+                                                ) : syntenyData.length > 0 && referenceData && !showWelcomeCard ? (
                                                     <div className="flex-1 min-h-0">
                                                         <ChromosomeSynteny
                                                             key={filteredData.referenceData.map(d => d.chr_id).join(',')}

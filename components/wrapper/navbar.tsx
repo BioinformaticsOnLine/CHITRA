@@ -217,6 +217,7 @@ export default function NavBar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
   const isHomePage = pathname === '/'
+  const isChitraPage = pathname === '/chitra'
   // const [user, setUser] = useState<User | null>(null)
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -317,7 +318,7 @@ export default function NavBar() {
                 <UserActions onSignOut={handleSignOut} onShare={async () => null} onSave={async () => null} />
               )}
               <ModeToggle />
-              <GetStartedButton />
+              {!isChitraPage && <GetStartedButton />}
             </div>
           </motion.div>
         </motion.div>

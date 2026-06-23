@@ -26,10 +26,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/animate-ui/radix/tabs"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Database, X, ArrowUpDown, ArrowUp, ArrowDown, Download, Check, MousePointerClick } from "lucide-react"
+import { Database, X, ArrowUpDown, ArrowUp, ArrowDown, Download, Check, MousePointerClick, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SyntenyData, ChromosomeData, GeneAnnotation, ReferenceGenomeData } from "@/app/types"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 // Props for the RawDataTablesDisplay component
 interface RawDataTablesDisplayProps {
@@ -317,60 +319,77 @@ function VirtualTable<T>({
 // Column definitions for each table type
 const columnHelper = createColumnHelper<any>()
 
+/** Renders a column header with a hover tooltip describing the field. */
+function ColHeader({ label, tooltip }: { label: string; tooltip: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex items-center gap-1 cursor-help">
+          {label}
+          <Info className="h-3 w-3 opacity-40 shrink-0" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={6} className="max-w-[220px] text-xs leading-snug z-[200]">
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 const syntenyColumns = [
-  columnHelper.display({ id: 'sno', header: 'S.No', size: 60, cell: (info) => info.row.index + 1 }),
-  columnHelper.accessor('query_name', { header: 'Query Name', size: 140 }),
-  columnHelper.accessor('query_chr', { header: 'Query Chr', size: 90 }),
-  columnHelper.accessor('query_start', { header: 'Query Start', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('query_end', { header: 'Query End', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('query_strand', { header: 'Strand', size: 70 }),
-  columnHelper.accessor('ref_chr', { header: 'Ref Chr', size: 90 }),
-  columnHelper.accessor('ref_start', { header: 'Ref Start', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('ref_end', { header: 'Ref End', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('ref_name', { header: 'Ref Genome', size: 140 }),
-  columnHelper.accessor('symbol', { header: 'Symbol', size: 90 }),
-  columnHelper.accessor('class', { header: 'Class', size: 110 }),
-  columnHelper.accessor('GeneID', { header: 'Gene ID', size: 110 }),
+  columnHelper.display({ id: 'sno', header: () => <ColHeader label="S.No" tooltip="Sequential row number" />, size: 60, cell: (info) => info.row.index + 1 }),
+  columnHelper.accessor('query_name', { header: () => <ColHeader label="Query Name" tooltip="Name of the query genome being compared against the reference" />, size: 140 }),
+  columnHelper.accessor('query_chr', { header: () => <ColHeader label="Query Chr" tooltip="Chromosome identifier in the query genome" />, size: 90 }),
+  columnHelper.accessor('query_start', { header: () => <ColHeader label="Query Start" tooltip="Start position of the synteny block on the query chromosome (bp)" />, size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('query_end', { header: () => <ColHeader label="Query End" tooltip="End position of the synteny block on the query chromosome (bp)" />, size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('query_strand', { header: () => <ColHeader label="Strand" tooltip="Alignment strand orientation: + (forward/syntenic) or − (reverse/inverted)" />, size: 70 }),
+  columnHelper.accessor('ref_chr', { header: () => <ColHeader label="Ref Chr" tooltip="Chromosome identifier in the reference genome" />, size: 90 }),
+  columnHelper.accessor('ref_start', { header: () => <ColHeader label="Ref Start" tooltip="Start position of the synteny block on the reference chromosome (bp)" />, size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('ref_end', { header: () => <ColHeader label="Ref End" tooltip="End position of the synteny block on the reference chromosome (bp)" />, size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('ref_name', { header: () => <ColHeader label="Ref Genome" tooltip="Name of the reference genome" />, size: 140 }),
+  columnHelper.accessor('symbol', { header: () => <ColHeader label="Symbol" tooltip="Gene symbol associated with this synteny block (if annotated)" />, size: 90 }),
+  columnHelper.accessor('class', { header: () => <ColHeader label="Class" tooltip="Functional or structural class of the synteny block (e.g., gene, repeat)" />, size: 110 }),
+  columnHelper.accessor('GeneID', { header: () => <ColHeader label="Gene ID" tooltip="NCBI Gene identifier for the annotated gene in this block" />, size: 110 }),
 ]
 
 const genomeColumns = [
-  columnHelper.display({ id: 'sno', header: 'S.No', size: 60, cell: (info) => info.row.index + 1 }),
-  columnHelper.accessor('genome_name', { header: 'Genome Name', size: 150 }),
-  columnHelper.accessor('chr_id', { header: 'Chr ID', size: 110 }),
-  columnHelper.accessor('chr_type', { header: 'Type', size: 90 }),
-  columnHelper.accessor('chr_size_bp', { header: 'Size (bp)', size: 120, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('centromere_start', { header: 'Centro. Start', size: 130, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('centromere_end', { header: 'Centro. End', size: 130, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.display({ id: 'sno', header: () => <ColHeader label="S.No" tooltip="Sequential row number" />, size: 60, cell: (info) => info.row.index + 1 }),
+  columnHelper.accessor('genome_name', { header: () => <ColHeader label="Genome Name" tooltip="Name of the species or genome assembly" />, size: 150 }),
+  columnHelper.accessor('chr_id', { header: () => <ColHeader label="Chr ID" tooltip="Chromosome identifier within this genome (e.g., chr1, chrX)" />, size: 110 }),
+  columnHelper.accessor('chr_type', { header: () => <ColHeader label="Type" tooltip="Chromosome type, e.g., autosome or sex chromosome" />, size: 90 }),
+  columnHelper.accessor('chr_size_bp', { header: () => <ColHeader label="Size (bp)" tooltip="Total length of the chromosome in base pairs" />, size: 120, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('centromere_start', { header: () => <ColHeader label="Centromere Start" tooltip="Start position of the centromere region (bp). Optional — used to render the centromere constriction on chromosome ideograms." />, size: 165, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('centromere_end', { header: () => <ColHeader label="Centromere End" tooltip="End position of the centromere region (bp). Optional — used to render the centromere constriction on chromosome ideograms." />, size: 160, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
 ]
 
 const referenceColumns = [
-  columnHelper.display({ id: 'sno', header: 'S.No', size: 60, cell: (info) => info.row.index + 1 }),
-  columnHelper.accessor('chromosome', { header: 'Chromosome', size: 120 }),
-  columnHelper.accessor('size', { header: 'Size', size: 120, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('centromere_start', { header: 'Centro. Start', size: 140, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('centromere_end', { header: 'Centro. End', size: 140, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.display({ id: 'sno', header: () => <ColHeader label="S.No" tooltip="Sequential row number" />, size: 60, cell: (info) => info.row.index + 1 }),
+  columnHelper.accessor('chromosome', { header: () => <ColHeader label="Chromosome" tooltip="Reference chromosome identifier" />, size: 120 }),
+  columnHelper.accessor('size', { header: () => <ColHeader label="Size (bp)" tooltip="Total length of the reference chromosome in base pairs" />, size: 120, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('centromere_start', { header: () => <ColHeader label="Centromere Start" tooltip="Start position of the centromere region (bp). Optional — used to render the centromere constriction on chromosome ideograms." />, size: 170, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('centromere_end', { header: () => <ColHeader label="Centromere End" tooltip="End position of the centromere region (bp). Optional — used to render the centromere constriction on chromosome ideograms." />, size: 165, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
 ]
 
 const geneColumns = [
-  columnHelper.display({ id: 'sno', header: 'S.No', size: 60, cell: (info) => info.row.index + 1 }),
-  columnHelper.accessor('chromosome', { header: 'Chr', size: 100 }),
-  columnHelper.accessor('genomic_accession', { header: 'Accession', size: 140 }),
-  columnHelper.accessor('start', { header: 'Start', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('end', { header: 'End', size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('strand', { header: 'Strand', size: 70 }),
-  columnHelper.accessor('class', { header: 'Class', size: 140 }),
-  columnHelper.accessor('symbol', { header: 'Symbol', size: 90, cell: (info: CellContext<any, string>) => info.getValue() || 'N/A' }),
-  columnHelper.accessor('name', { header: 'Name', size: 180, cell: (info: CellContext<any, string>) => info.getValue() || 'N/A' }),
-  columnHelper.accessor('locus_tag', { header: 'Locus Tag', size: 110, cell: (info: CellContext<any, string>) => info.getValue() || 'N/A' }),
-  columnHelper.accessor('GeneID', { header: 'Gene ID', size: 110 }),
+  columnHelper.display({ id: 'sno', header: () => <ColHeader label="S.No" tooltip="Sequential row number" />, size: 60, cell: (info) => info.row.index + 1 }),
+  columnHelper.accessor('chromosome', { header: () => <ColHeader label="Chr" tooltip="Chromosome on which this gene is located" />, size: 100 }),
+  columnHelper.accessor('genomic_accession', { header: () => <ColHeader label="Accession" tooltip="NCBI genomic accession number for the sequence containing this gene" />, size: 140 }),
+  columnHelper.accessor('start', { header: () => <ColHeader label="Start" tooltip="Gene start position on the chromosome (bp)" />, size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('end', { header: () => <ColHeader label="End" tooltip="Gene end position on the chromosome (bp)" />, size: 110, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('strand', { header: () => <ColHeader label="Strand" tooltip="Gene strand orientation: + (forward) or − (reverse)" />, size: 70 }),
+  columnHelper.accessor('class', { header: () => <ColHeader label="Class" tooltip="Gene biotype or functional class (e.g., protein-coding, pseudogene, ncRNA)" />, size: 140 }),
+  columnHelper.accessor('symbol', { header: () => <ColHeader label="Symbol" tooltip="Official gene symbol (e.g., BRCA1)" />, size: 90, cell: (info: CellContext<any, string>) => info.getValue() || 'N/A' }),
+  columnHelper.accessor('name', { header: () => <ColHeader label="Name" tooltip="Full descriptive name of the gene" />, size: 180, cell: (info: CellContext<any, string>) => info.getValue() || 'N/A' }),
+  columnHelper.accessor('locus_tag', { header: () => <ColHeader label="Locus Tag" tooltip="Systematic locus tag identifier assigned to this gene" />, size: 110, cell: (info: CellContext<any, string>) => info.getValue() || 'N/A' }),
+  columnHelper.accessor('GeneID', { header: () => <ColHeader label="Gene ID" tooltip="NCBI Gene identifier (numeric) for this gene" />, size: 110 }),
 ]
 
 const breakpointColumns = [
-  columnHelper.display({ id: 'sno', header: 'S.No', size: 60, cell: (info) => info.row.index + 1 }),
-  columnHelper.accessor('ref_chr', { header: 'Ref Chr', size: 160 }),
-  columnHelper.accessor('ref_start', { header: 'Start Pos', size: 130, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('ref_end', { header: 'End Pos', size: 130, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
-  columnHelper.accessor('breakpoint', { header: 'Breakpoint Type', size: 140 }),
+  columnHelper.display({ id: 'sno', header: () => <ColHeader label="S.No" tooltip="Sequential row number" />, size: 60, cell: (info) => info.row.index + 1 }),
+  columnHelper.accessor('ref_chr', { header: () => <ColHeader label="Ref Chr" tooltip="Reference chromosome on which the breakpoint is located" />, size: 160 }),
+  columnHelper.accessor('ref_start', { header: () => <ColHeader label="Start Pos" tooltip="Start position of the breakpoint interval on the reference chromosome (bp)" />, size: 130, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('ref_end', { header: () => <ColHeader label="End Pos" tooltip="End position of the breakpoint interval on the reference chromosome (bp)" />, size: 130, cell: (info: CellContext<any, number>) => info.getValue()?.toLocaleString() ?? 'N/A' }),
+  columnHelper.accessor('breakpoint', { header: () => <ColHeader label="Breakpoint Type" tooltip="Type of chromosomal rearrangement at this breakpoint (e.g., inversion, translocation)" />, size: 160 }),
 ]
 
 function SkeletonLoader() {
@@ -557,12 +576,66 @@ export function RawDataTablesDisplay({
   onSyntenyRowClick,
   selectedSynteny,
 }: RawDataTablesDisplayProps) {
+  const TABLE_COLUMN_DOCS: Record<string, { col: string; desc: string }[]> = {
+    synteny: [
+      { col: 'S.No',        desc: 'Sequential row number' },
+      { col: 'Query Name',  desc: 'Name of the query genome being compared' },
+      { col: 'Query Chr',   desc: 'Chromosome identifier in the query genome' },
+      { col: 'Query Start', desc: 'Start position on the query chromosome (bp)' },
+      { col: 'Query End',   desc: 'End position on the query chromosome (bp)' },
+      { col: 'Strand',      desc: 'Orientation: + forward (syntenic) / − reverse (inverted)' },
+      { col: 'Ref Chr',     desc: 'Chromosome identifier in the reference genome' },
+      { col: 'Ref Start',   desc: 'Start position on the reference chromosome (bp)' },
+      { col: 'Ref End',     desc: 'End position on the reference chromosome (bp)' },
+      { col: 'Ref Genome',  desc: 'Name of the reference genome' },
+      { col: 'Symbol',      desc: 'Gene symbol associated with this synteny block' },
+      { col: 'Class',       desc: 'Functional class of the synteny block (e.g., gene, repeat)' },
+      { col: 'Gene ID',     desc: 'NCBI Gene identifier for the annotated gene' },
+    ],
+    genome: [
+      { col: 'S.No',             desc: 'Sequential row number' },
+      { col: 'Genome Name',      desc: 'Name of the species or genome assembly' },
+      { col: 'Chr ID',           desc: 'Chromosome identifier (e.g., chr1, chrX)' },
+      { col: 'Type',             desc: 'Chromosome type (e.g., autosome, sex chromosome)' },
+      { col: 'Size (bp)',        desc: 'Total chromosome length in base pairs' },
+      { col: 'Centromere Start', desc: 'Start of centromere region (bp) — optional; renders constriction on ideogram' },
+      { col: 'Centromere End',   desc: 'End of centromere region (bp) — optional; renders constriction on ideogram' },
+    ],
+    reference: [
+      { col: 'S.No',             desc: 'Sequential row number' },
+      { col: 'Chromosome',       desc: 'Reference chromosome identifier' },
+      { col: 'Size (bp)',        desc: 'Total reference chromosome length in base pairs' },
+      { col: 'Centromere Start', desc: 'Start of centromere region (bp) — optional' },
+      { col: 'Centromere End',   desc: 'End of centromere region (bp) — optional' },
+    ],
+    genes: [
+      { col: 'S.No',       desc: 'Sequential row number' },
+      { col: 'Chr',        desc: 'Chromosome on which the gene is located' },
+      { col: 'Accession',  desc: 'NCBI genomic accession number' },
+      { col: 'Start',      desc: 'Gene start position (bp)' },
+      { col: 'End',        desc: 'Gene end position (bp)' },
+      { col: 'Strand',     desc: 'Gene orientation: + forward / − reverse' },
+      { col: 'Class',      desc: 'Gene biotype (e.g., protein-coding, pseudogene, ncRNA)' },
+      { col: 'Symbol',     desc: 'Official gene symbol (e.g., BRCA1)' },
+      { col: 'Name',       desc: 'Full descriptive gene name' },
+      { col: 'Locus Tag',  desc: 'Systematic locus tag identifier' },
+      { col: 'Gene ID',    desc: 'NCBI Gene identifier (numeric)' },
+    ],
+    breakpoints: [
+      { col: 'S.No',            desc: 'Sequential row number' },
+      { col: 'Ref Chr',         desc: 'Reference chromosome containing the breakpoint' },
+      { col: 'Start Pos',       desc: 'Breakpoint interval start on the reference chromosome (bp)' },
+      { col: 'End Pos',         desc: 'Breakpoint interval end on the reference chromosome (bp)' },
+      { col: 'Breakpoint Type', desc: 'Type of chromosomal rearrangement (e.g., inversion, translocation)' },
+    ],
+  };
+
   const TABS = [
-    { id: 'synteny', label: 'Synteny', data: syntenyData, columns: syntenyColumns, filterColumn: 'query_name' },
-    { id: 'genome', label: 'Genome', data: genomeData, columns: genomeColumns, filterColumn: 'genome_name' },
-    { id: 'reference', label: 'Reference', data: referenceData?.chromosomeSizes, columns: referenceColumns, filterColumn: 'chromosome' },
-    { id: 'genes', label: 'Genes', data: referenceData?.geneAnnotations, columns: geneColumns, filterColumn: 'symbol' },
-    { id: 'breakpoints', label: 'Breakpoints', data: referenceData?.breakpoints, columns: breakpointColumns, filterColumn: 'ref_chr' },
+    { id: 'synteny',    label: 'Synteny',    data: syntenyData,                   columns: syntenyColumns,    filterColumn: 'query_name' },
+    { id: 'genome',     label: 'Genome',     data: genomeData,                    columns: genomeColumns,     filterColumn: 'genome_name' },
+    { id: 'reference',  label: 'Reference',  data: referenceData?.chromosomeSizes, columns: referenceColumns,  filterColumn: 'chromosome' },
+    { id: 'genes',      label: 'Genes',      data: referenceData?.geneAnnotations, columns: geneColumns,       filterColumn: 'symbol' },
+    { id: 'breakpoints',label: 'Breakpoints',data: referenceData?.breakpoints,     columns: breakpointColumns, filterColumn: 'ref_chr' },
   ];
 
   return (
@@ -578,7 +651,38 @@ export function RawDataTablesDisplay({
           <SummaryDashboard syntenyData={syntenyData} genomeData={genomeData} referenceData={referenceData} />
         </TabsContent>
         {TABS.map(tab => (
-          <TabsContent key={tab.id} value={tab.id} className="mt-8">
+          <TabsContent key={tab.id} value={tab.id} className="mt-4">
+            {/* Per-table column legend popover */}
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">
+                {tab.data ? `${(tab.data as any[]).length} rows` : 'No data'}
+              </span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                    Column Guide
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" sideOffset={8} className="w-80 p-0 z-[200]">
+                  <div className="px-3 py-2 border-b bg-muted/50">
+                    <p className="text-xs font-semibold">{tab.label} — Column Descriptions</p>
+                  </div>
+                  <div className="divide-y max-h-72 overflow-y-auto">
+                    {(TABLE_COLUMN_DOCS[tab.id] ?? []).map(({ col, desc }) => (
+                      <div key={col} className="flex gap-3 px-3 py-2">
+                        <span className="min-w-[100px] text-xs font-medium text-foreground shrink-0">{col}</span>
+                        <span className="text-xs text-muted-foreground leading-snug">{desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
             {!tab.data ? (
               <SkeletonLoader />
             ) : tab.data.length > 0 ? (

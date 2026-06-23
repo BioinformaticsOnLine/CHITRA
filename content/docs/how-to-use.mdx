@@ -212,3 +212,101 @@ By using SyntenyTracker2, you can generate all mandatory input files for CHITRA 
 > MCScanX predicts collinearity by connecting individual homologous genes based on e-values (e.g., matching `chr1_gene001` to `chr3_gene221`), rather than exporting the exact start/end boundary coordinates of a contiguous physical DNA block. Since CHITRA currently requires exact boundary mappings (like those produced by Satsuma or SyntenyTracker) to render physical chromosome ribbons, MCScanX `.collinearity` outputs currently require you to run a custom intermediate script to convert those gene-to-gene links into standard block coordinates before uploading to CHITRA.
 
 **Future Support:** In a future release, CHITRA plans to directly support parsing `.collinearity` output files. We intend to automatically infer and group these connected lower-e-value threshold genes to bridge and generate broader syntenic regions between chromosomes directly within the application.
+
+---
+
+## Raw Data Viewer — Column Reference
+
+The **Raw Data Viewer** (accessible via the *View Data* button in the toolbar) displays the loaded data across five tabs. Each column header has an inline ℹ tooltip and a **Column Guide** button per tab. The full definitions are listed below.
+
+> [!NOTE]
+> All positional values (start, end, size) are in **base pairs (bp)** unless stated otherwise. Columns marked *(optional)* may show `N/A` if not provided in the input file.
+
+---
+
+### Synteny Table
+
+Displays pairwise synteny block coordinates between the reference and query genomes.
+
+| Column | Field in CSV | Description |
+| :--- | :--- | :--- |
+| **S.No** | — | Sequential row number (auto-generated) |
+| **Query Name** | `query_name` | Name of the query genome being compared against the reference |
+| **Query Chr** | `query_chr` | Chromosome identifier in the query genome (e.g., `chr1`) |
+| **Query Start** | `query_start` | Start position of the synteny block on the query chromosome (bp) |
+| **Query End** | `query_end` | End position of the synteny block on the query chromosome (bp) |
+| **Strand** | `query_strand` | Alignment orientation: `+` = forward/syntenic, `−` = reverse/inverted |
+| **Ref Chr** | `ref_chr` | Chromosome identifier in the reference genome |
+| **Ref Start** | `ref_start` | Start position of the synteny block on the reference chromosome (bp) |
+| **Ref End** | `ref_end` | End position of the synteny block on the reference chromosome (bp) |
+| **Ref Genome** | `ref_name` | Name of the reference genome |
+| **Symbol** | `symbol` | Gene symbol associated with this block, if annotated *(optional)* |
+| **Class** | `class` | Functional or structural class of the block (e.g., gene, repeat) *(optional)* |
+| **Gene ID** | `GeneID` | NCBI Gene identifier for the annotated gene *(optional)* |
+
+---
+
+### Genome Table
+
+Lists all chromosomes and their sizes for every genome loaded into CHITRA.
+
+| Column | Field in CSV | Description |
+| :--- | :--- | :--- |
+| **S.No** | — | Sequential row number (auto-generated) |
+| **Genome Name** | `genome_name` | Name of the species or genome assembly |
+| **Chr ID** | `chr_id` | Chromosome identifier within this genome (e.g., `chr1`, `chrX`) |
+| **Type** | `chr_type` | Chromosome type, e.g., autosome or sex chromosome *(optional)* |
+| **Size (bp)** | `chr_size_bp` | Total length of the chromosome in base pairs |
+| **Centromere Start** | `centromere_start` | Start position of the centromere region (bp) *(optional)* — when provided, CHITRA renders the characteristic constriction notch on the chromosome ideogram |
+| **Centromere End** | `centromere_end` | End position of the centromere region (bp) *(optional)* — used together with `centromere_start` to draw the centromere |
+
+> [!NOTE]
+> `centromere_start` and `centromere_end` are **optional**. If omitted, chromosomes are drawn as plain rectangular bars without a centromere marker. Providing them enables metacentric/submetacentric chromosome morphology rendering.
+
+---
+
+### Reference Table
+
+Contains size information specifically for the primary reference genome used as the coordinate base.
+
+| Column | Field in CSV | Description |
+| :--- | :--- | :--- |
+| **S.No** | — | Sequential row number (auto-generated) |
+| **Chromosome** | `chromosome` | Reference chromosome identifier |
+| **Size (bp)** | `size` | Total length of the reference chromosome in base pairs |
+| **Centromere Start** | `centromere_start` | Start position of the centromere region (bp) *(optional)* |
+| **Centromere End** | `centromere_end` | End position of the centromere region (bp) *(optional)* |
+
+---
+
+### Genes Table
+
+Gene annotation data for the reference genome (loaded via `ref_gene_annotations.csv` or the Feature Table Converter).
+
+| Column | Field in CSV | Description |
+| :--- | :--- | :--- |
+| **S.No** | — | Sequential row number (auto-generated) |
+| **Chr** | `chromosome` | Chromosome on which the gene is located |
+| **Accession** | `genomic_accession` | NCBI genomic accession number for the sequence containing this gene |
+| **Start** | `start` | Gene start position on the chromosome (bp) |
+| **End** | `end` | Gene end position on the chromosome (bp) |
+| **Strand** | `strand` | Gene orientation: `+` = forward, `−` = reverse |
+| **Class** | `class` | Gene biotype or functional class (e.g., `protein_coding`, `pseudogene`, `ncRNA`) |
+| **Symbol** | `symbol` | Official gene symbol (e.g., `BRCA1`) *(optional)* |
+| **Name** | `name` | Full descriptive name of the gene *(optional)* |
+| **Locus Tag** | `locus_tag` | Systematic locus tag identifier assigned by NCBI *(optional)* |
+| **Gene ID** | `GeneID` | NCBI Gene identifier (numeric) *(optional)* |
+
+---
+
+### Breakpoints Table
+
+Chromosomal breakpoint intervals on the reference genome (loaded via `breakpoints.csv`).
+
+| Column | Field in CSV | Description |
+| :--- | :--- | :--- |
+| **S.No** | — | Sequential row number (auto-generated) |
+| **Ref Chr** | `ref_chr` | Reference chromosome on which the breakpoint is located |
+| **Start Pos** | `ref_start` | Start position of the breakpoint interval (bp) |
+| **End Pos** | `ref_end` | End position of the breakpoint interval (bp) |
+| **Breakpoint Type** | `breakpoint` | Type of chromosomal rearrangement (e.g., inversion, translocation, deletion) |
