@@ -123,43 +123,24 @@ export function getChromosomeTooltip(chr: ChromosomeData, maxChrSizeMb: number):
         </div>
       )}
 
-      {/* Size Comparison */}
-      <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 pt-3">
+      {/* Chromosome Size */}
+      <div className="space-y-1.5 border-t border-gray-100 dark:border-gray-800 pt-3">
         <div className="flex items-center justify-between">
           <Badge
             variant="outline"
             className="bg-gray-50 text-gray-800 dark:bg-gray-900/50 dark:text-gray-100 dark:border-gray-700"
           >
-            Size Category
+            Chromosome Size
           </Badge>
-          <Badge
-            variant="secondary"
-            className={cn(
-              "text-xs",
-              Number(mbSize) > 100 ? "bg-green-100 text-green-900 dark:bg-green-950/50 dark:text-green-100 dark:border-green-800/30" :
-                Number(mbSize) > 50 ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-100 dark:border-yellow-800/30" :
-                  "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100 dark:border-orange-800/30"
-            )}
-          >
-            {Number(mbSize) > 100 ? 'Large (>100Mb)' :
-              Number(mbSize) > 50 ? 'Medium (50-100Mb)' :
-                'Small (<50Mb)'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="bg-blue-100/50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-100 dark:border-blue-800/30 font-mono">
+              {mbSize} Mb
+            </Badge>
+            <span className="text-xs text-muted-foreground font-mono">
+              ({chr.chr_size_bp.toLocaleString()} bp)
+            </span>
+          </div>
         </div>
-
-        {/* Size Visualization */}
-        <div className="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-linear-to-r from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600"
-            style={{
-              width: `${(Number(mbSize) / Math.max(maxChrSizeMb, Number(mbSize))) * 100}%`,
-              transition: 'width 0.3s ease-in-out'
-            }}
-          />
-        </div>
-        <p className="text-xs text-muted-foreground text-center -mt-1">
-          Size relative to a {maxChrSizeMb.toFixed(0)}Mb chromosome
-        </p>
       </div>
     </div>
   );
@@ -368,24 +349,24 @@ export function getSyntenyTooltip(link: SyntenyData, maxSyntenySizeMb: number): 
         </div>
         <div className="flex items-center justify-between">
           <Badge variant="outline" className="bg-gray-50 dark:bg-gray-900/50 dark:text-gray-100 dark:border-gray-700">
-            Size Category
+            Relative Size Class
           </Badge>
           <Badge
             variant="secondary"
             className={cn(
               "text-xs",
-              Number(size) > 10 ? "bg-green-100 text-green-900 dark:bg-green-950/50 dark:text-green-100 dark:border-green-800/30" :
-                Number(size) > 5 ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-100 dark:border-yellow-800/30" :
-                  Number(size) > 1 ? "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100 dark:border-orange-800/30" :
+              percentage >= 75 ? "bg-green-100 text-green-900 dark:bg-green-950/50 dark:text-green-100 dark:border-green-800/30" :
+                percentage >= 50 ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-100 dark:border-yellow-800/30" :
+                  percentage >= 25 ? "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-100 dark:border-orange-800/30" :
                     "bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-100 dark:border-red-800/30"
             )}
           >
-            {calculateConservation(Number(size))}
+            {calculateConservation(percentage)}
           </Badge>
         </div>
       </div>
 
-      {/* Progress Bar */}
+      {/* Relative Size Bar */}
       <div className="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
         <div
           className="h-full bg-linear-to-r from-blue-500 to-purple-500 dark:from-blue-600 dark:to-purple-600"
@@ -396,18 +377,18 @@ export function getSyntenyTooltip(link: SyntenyData, maxSyntenySizeMb: number): 
         />
       </div>
       <div className="flex justify-between text-xs text-muted-foreground -mt-1">
-        <span>Size relative to a {maxSyntenySizeMb.toFixed(0)}Mb synteny block</span>
+        <span>Size relative to largest block ({maxSyntenySizeMb.toFixed(0)} Mb) in dataset</span>
         <span>{percentage.toFixed(0)}%</span>
       </div>
     </div>
   );
 }
 
-function calculateConservation(sizeMb: number): string {
-  if (sizeMb > 10) return 'Large (>10Mb)';
-  if (sizeMb > 5) return 'Medium (5-10Mb)';
-  if (sizeMb > 1) return 'Small (1-5Mb)';
-  return 'Micro (<1Mb)';
+function calculateConservation(percentage: number): string {
+  if (percentage >= 75) return 'Top Tier (≥75%)';
+  if (percentage >= 50) return 'Major (50–75%)';
+  if (percentage >= 25) return 'Moderate (25–50%)';
+  return 'Minor (<25%)';
 }
 
 export interface GeneTooltipData {
