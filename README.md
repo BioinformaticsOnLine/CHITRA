@@ -143,7 +143,7 @@ Built with ❤️, React, ShadCN UI, Tailwind CSS, Motion, D3.js, and jsSVG.
 
 *   Web: [https://chitra.bioinformaticsonline.com/](https://chitra.bioinformaticsonline.com/)
 *   Docs: [https://chitra.bioinformaticsonline.com/docs](https://chitra.bioinformaticsonline.com/docs)
-*   Source: [https://github.com/pranjalpruthi/CHITRA](https://github.com/pranjalpruthi/CHITRA)
+*   Source: [https://github.com/BioinformaticsOnLine/CHITRA](https://github.com/BioinformaticsOnLine/CHITRA)
 
 
 ## Quick Deploy 🚀
@@ -192,7 +192,7 @@ Follow these steps to set up and run CHITRA on your local machine or a self-host
 
 Open your terminal and run the following command to clone the CHITRA repository:
 ```bash
-git clone https://github.com/pranjalpruthi/CHITRA.git
+git clone https://github.com/BioinformaticsOnLine/CHITRA.git
 ```
 
 ### 3. Navigate to the Project Directory
@@ -223,7 +223,7 @@ The fastest way to deploy CHITRA is using Docker:
 
 ```bash
 # Clone and navigate to the repository
-git clone https://github.com/pranjalpruthi/CHITRA.git
+git clone https://github.com/BioinformaticsOnLine/CHITRA.git
 cd CHITRA
 
 # Start with Docker Compose (recommended)
