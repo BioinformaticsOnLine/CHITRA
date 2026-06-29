@@ -30,7 +30,7 @@ import { Database, X, ArrowUpDown, ArrowUp, ArrowDown, Download, Check, MousePoi
 import { Button } from "@/components/ui/button"
 import { SyntenyData, ChromosomeData, GeneAnnotation, ReferenceGenomeData } from "@/app/types"
 import { cn } from "@/lib/utils"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 // Props for the RawDataTablesDisplay component
@@ -322,17 +322,19 @@ const columnHelper = createColumnHelper<any>()
 /** Renders a column header with a hover tooltip describing the field. */
 function ColHeader({ label, tooltip }: { label: string; tooltip: string }) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex items-center gap-1 cursor-help">
-          {label}
-          <Info className="h-3 w-3 opacity-40 shrink-0" />
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" sideOffset={6} className="max-w-[220px] text-xs leading-snug z-[200]">
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1 cursor-help">
+            {label}
+            <Info className="h-3 w-3 opacity-40 shrink-0" />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={6} className="max-w-[220px] text-xs leading-snug z-[200]">
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
